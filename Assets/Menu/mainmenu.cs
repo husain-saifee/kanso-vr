@@ -76,7 +76,11 @@ public class mainmenu : MonoBehaviour
 
             string original = label.text.Trim();
 
-            if (original.Contains("CLAUSTROPHOBHIA") || original.Contains("cLAUS"))
+            if (original.Contains("DePhobia"))
+            {
+                label.text = "Kanso VR";
+            }
+            else if (original.Contains("CLAUSTROPHOBHIA") || original.Contains("cLAUS"))
             {
                 label.text = "Claustrophobia";
             }

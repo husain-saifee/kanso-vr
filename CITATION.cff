@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use Kanso VR in clinical research, therapeutic practice, or software development, please cite it as below."
+authors:
+  - family-names: Saifee
+    given-names: Husain
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+title: "Kanso VR: An Accessibility-First, OpenXR Exposure Therapy Platform"
+version: 1.0.0
+date-released: 2026-10-24
+url: "https://github.com/husain-saifee/kanso-vr"
+repository-code: "https://github.com/husain-saifee/kanso-vr"
+keywords:
+  - virtual reality
+  - exposure therapy
+  - vret
+  - openxr
+  - unity
+  - behavioral health
+  - accessibility
+  - wcag-aaa
+  - mental health
+  - meta quest
+  - clinical xr
+  - spatial computing
+license: MIT
