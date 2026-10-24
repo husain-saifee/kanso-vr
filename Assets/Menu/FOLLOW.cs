@@ -1,32 +1,24 @@
 using UnityEngine;
-using UnityEngine.Networking;
 
 /// <summary>
-/// Handles social external URLs and review feedback emails.
-/// Migrated from obsolete WWW.EscapeURL to UnityWebRequest.EscapeURL.
+/// Neutralized external link handler.
+/// Prevents telemetry and unauthorized external network calls in compliance
+/// with clinical and patient privacy standards.
 /// </summary>
 public class FOLLOW : MonoBehaviour
 {
     public void GITHUB()
     {
-        Application.OpenURL("http://www.github.com/manipta");
+        Debug.Log("[DePhobia Privacy] External link disabled in clinical mode.");
     }
 
     public void INSTA()
     {
-        Application.OpenURL("http://www.instagram.com/wga_developer/");
+        Debug.Log("[DePhobia Privacy] External link disabled in clinical mode.");
     }
 
     public void Gmail()
     {
-        string email = "manigarg2002@gmail.com";
-        string subject = MyEscapeURL("Used Your App and Wanna Review it :)");
-        string body = MyEscapeURL("AppName: DePhobia\nName:\nAddress:\n");
-        Application.OpenURL("mailto:" + email + "?subject=" + subject + "&body=" + body);
-    }
-
-    private string MyEscapeURL(string url)
-    {
-        return UnityWebRequest.EscapeURL(url).Replace("+", "%20");
+        Debug.Log("[DePhobia Privacy] External data solicitation disabled in clinical mode.");
     }
 }
