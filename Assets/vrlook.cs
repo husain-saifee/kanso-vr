@@ -182,7 +182,8 @@ public class vrlook : MonoBehaviour
 
     private void PlayAmbientSounds()
     {
-        if (Tim - lastplay > 5f)
+        // Gentle ambient bird song / wind cues at low volume (never sudden loud horn honks)
+        if (Tim - lastplay > 8f)
         {
             int i = Random.Range(1, 4);
             AudioClip clip = i switch
@@ -191,69 +192,49 @@ public class vrlook : MonoBehaviour
                 2 => a2,
                 _ => a3
             };
-            if (clip != null)
-                AudioSource.PlayClipAtPoint(clip, rd.transform.position, 1f);
+            if (clip != null && rd != null)
+            {
+                // Play softly at 0.35 volume
+                AudioSource.PlayClipAtPoint(clip, rd.transform.position, 0.35f);
+            }
             lastplay = Tim;
         }
 
-        if (Tim - lastpl > 7f)
-        {
-            int j = Random.Range(2, 100);
-            Vector3 soundPos = new Vector3(rd.transform.position.x, 15f, rd.transform.position.z);
-            AudioClip bClip = null;
-
-            if (j % 11 == 0) bClip = b1;
-            else if (j % 3 == 0) bClip = b2;
-            else if (j % 2 == 0) bClip = b3;
-            else if (j % 6 == 0) bClip = b5;
-            else bClip = b4;
-
-            if (bClip != null)
-                AudioSource.PlayClipAtPoint(bClip, soundPos, 1.4f);
-            lastpl = Tim;
-        }
+        // Banned loud car horn honks (b1..b5) to protect emotional safety and prevent startle response.
     }
 
     private void HandleEndingSequence()
     {
+        if (endingstate == 1) return;
         endingstate = 1;
-        float elapsedSinceCeiling = Tim - tlast;
+        e = 1;
+
+        if (rd != null)
+        {
+            rd.velocity = Vector3.zero;
+            rd.isKinematic = true;
+        }
 
         if (Max != null)
         {
-            if (elapsedSinceCeiling <= 8f)
-            {
-                Max.SetActive(true);
-                if (maxheight != null)
-                {
-                    maxheight.color = ((int)elapsedSinceCeiling % 2 == 0) ? new Color32(184, 29, 19, 255) : Color.white;
-                    maxheight.text = "MAXIMUM ALTITUDE REACHED!";
-                }
-            }
-            else if (elapsedSinceCeiling > 8f && elapsedSinceCeiling < 30f)
-            {
-                Max.SetActive(false);
-            }
-            else if (elapsedSinceCeiling >= 30f && elapsedSinceCeiling <= 59f)
-            {
-                Max.SetActive(true);
-                if (maxheight != null)
-                {
-                    int remaining = Mathf.Max(0, 60 - (int)elapsedSinceCeiling);
-                    maxheight.text = $"Session Concluding in {remaining}s";
-                }
-            }
+            Max.SetActive(false); // Hide legacy flashing HUD
         }
 
-        if (elapsedSinceCeiling >= 60f)
+        TherapyAudioManager.TriggerCaption("Summit reached (360m). Take a moment to breathe.", 6.0f);
+
+        // Show peaceful End Ritual
+        TherapySessionRitual.ShowEndRitual("High Elevation", "Peak Altitude Reached: 360m", () =>
         {
-            if (rd != null) rd.isKinematic = true;
-            if (Max != null)
+            var startVr3 = FindObjectOfType<StartVr3>();
+            if (startVr3 != null)
             {
-                Max.SetActive(true);
-                if (maxheight != null) maxheight.text = "SESSION COMPLETE!";
+                startVr3.SaveAndReturn();
             }
-            e = 1;
-        }
+            else
+            {
+                PatientSessionManager.Instance.EndAndSaveSession(completed: true, extraParams: "Acrophobia Summit 360m Reached");
+                VRFadeManager.Instance.FadeAndLoadScene(0, 0.5f);
+            }
+        });
     }
 }

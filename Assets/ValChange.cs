@@ -118,11 +118,12 @@ public class ValChange : MonoBehaviour
 
     private void UpdateColors()
     {
+        // Direction C: Calm palette - never alarming red or warning yellow
         Color targetColor = condition switch
         {
-            1 => new Color32(184, 29, 19, 255), // Red - warning
-            2 => new Color32(239, 183, 0, 255), // Yellow - caution
-            _ => Color.white
+            1 => new Color(0.714f, 0.702f, 0.808f, 1f), // TextSecondary #B6B3CE
+            2 => new Color(0.608f, 0.596f, 0.902f, 1f), // AccentLavender #9B98E6
+            _ => new Color(0.957f, 0.953f, 0.973f, 1f)  // TextPrimary #F4F3F8
         };
 
         if (waisti != null) waisti.color = targetColor;
