@@ -4,5 +4,17 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Menu/Menu.unity
+    guid: 8f6a3aabf2d89834ab9473d02ef77d72
+  - enabled: 1
+    path: Assets/Room/scenes/the last revelation.unity
+    guid: fffc368ce7c545240a157d1fa3ce0e97
+  - enabled: 1
+    path: Assets/Snowconesolid Assets/Super Beach Pack/Scenes/Island Example 3.unity
+    guid: 08955be9bf7d6da4f8fef5be4e6df549
+  - enabled: 1
+    path: Assets/Geopipe/Pack01Demo/Pack01Demo01.unity
+    guid: 3ed2f0201536ec348868b1052de8a5c7
   m_configObjects: {}
