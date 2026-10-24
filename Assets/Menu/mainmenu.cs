@@ -1,126 +1,110 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using System;
-using UnityEngine.SceneManagement;
+using System.Collections;
 using System.IO;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 using TMPro;
+using DePhobia.Core;
+using DePhobia.VR;
+
+/// <summary>
+/// Controller for DePhobia Main Menu.
+/// Routes scene transitions with VR fades, displays patient stats, and handles settings.
+/// </summary>
 public class mainmenu : MonoBehaviour
-{   //private Getval1 s;
-    public  GameObject a;
-    public  GameObject b;
-    public  GameObject c;
+{
+    public GameObject a;
+    public GameObject b;
+    public GameObject c;
     public static int flag = 0;
-    private TextMeshProUGUI t;
+
     public GameObject tex;
-    
+    private TextMeshProUGUI t;
+
+    private void Start()
+    {
+        if (tex != null)
+        {
+            t = tex.GetComponent<TextMeshProUGUI>();
+        }
+
+        // Ensure Canvas is in comfortable 3D World Space for VR
+        var canvas = FindObjectOfType<Canvas>();
+        if (canvas != null && canvas.GetComponent<VRWorldSpaceCanvasHelper>() == null)
+        {
+            canvas.gameObject.AddComponent<VRWorldSpaceCanvasHelper>();
+        }
+
+        // Fade in main menu
+        VRFadeManager.Instance.FadeIn(0.5f);
+    }
+
     public void PlayClaus()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+        VRFadeManager.Instance.FadeAndLoadScene(1, 0.4f);
     }
+
     public void PlayAqua()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 2);
+        VRFadeManager.Instance.FadeAndLoadScene(2, 0.4f);
     }
+
     public void PlayAcro()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 3);
+        VRFadeManager.Instance.FadeAndLoadScene(3, 0.4f);
     }
-    public  void Quit()
+
+    public void Quit()
     {
-        
-        
-        b.SetActive(true);
-        a.SetActive(false);
-        c.SetActive(true);
-        change();
-    }
-    public void change()
-    {
+        if (b != null) b.SetActive(true);
+        if (a != null) a.SetActive(false);
+        if (c != null) c.SetActive(true);
+
         flag = 1;
+        StartCoroutine(QuitRoutine(1.5f));
     }
+
+    private IEnumerator QuitRoutine(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        Debug.Log("[DePhobia] Application quit requested.");
+        Application.Quit();
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#endif
+    }
+
     public void CLAUSSTAT()
     {
-        string path1 = Application.persistentDataPath + "/PersonStats";
-        string path2=Application.persistentDataPath + "/PersonStats/ClausStats.txt"; ;
-        if (Directory.Exists(path1) == false)
-        {
-            Directory.CreateDirectory(path1);
-        }
-        if (File.Exists(path2) == true)
-        {
-            t = tex.GetComponent<TextMeshProUGUI>();
-            string word = File.ReadAllText(path2);
-            Debug.Log(word.ToString());
-            t.text = word.ToString();
+        EnsureTextComponent();
+        if (t == null) return;
 
-        }
-        else
-        {
-
-            t = tex.GetComponent<TextMeshProUGUI>();
-            t.text = "No Claustro Data";
-
-        }
-
-
+        string history = PatientSessionManager.Instance.GetFormattedHistoryForUI("Claustrophobia");
+        t.text = history;
     }
+
     public void AQUASTAT()
     {
-        
-        string path1 = Application.persistentDataPath + "/PersonStats";
-        string path2 = Application.persistentDataPath + "/PersonStats/AquaStats.txt"; ;
-        if (Directory.Exists(path1) == false)
-        {
-            Directory.CreateDirectory(path1);
-        }
-        if (File.Exists(path2) == true)
-        {
-            string word = File.ReadAllText(path2);
-            t = tex.GetComponent<TextMeshProUGUI>();
-            t.text = word.ToString();
-        }
-        else
-        {
+        EnsureTextComponent();
+        if (t == null) return;
 
-            t = tex.GetComponent<TextMeshProUGUI>();
-            t.text = "No Aqua Data";
-
-        }
-
+        string history = PatientSessionManager.Instance.GetFormattedHistoryForUI("Aquaphobia");
+        t.text = history;
     }
+
     public void ACROSTAT()
     {
-        
+        EnsureTextComponent();
+        if (t == null) return;
 
-        string path1 = Application.persistentDataPath + "/PersonStats";
-        string path2 = Application.persistentDataPath + "/PersonStats/AcroStats.txt"; ;
-        if (Directory.Exists(path1) == false)
-        {
-            Directory.CreateDirectory(path1);
-        }
-       
-            if (File.Exists(path2) == true)
-            {
-            string word = File.ReadAllText(path2);
-            t = tex.GetComponent<TextMeshProUGUI>();
-            t.text = word.ToString();
-        }
-            else
-            {
-            t = tex.GetComponent<TextMeshProUGUI>();
+        string history = PatientSessionManager.Instance.GetFormattedHistoryForUI("Acrophobia");
+        t.text = history;
+    }
 
-            t.text = "No Acro Data";
-
-        }
-
-
-        
-   /* static int getSDKInt()
+    private void EnsureTextComponent()
     {
-        using (var version = new AndroidJavaClass("android.os.Build$VERSION"))
+        if (t == null && tex != null)
         {
-            return version.GetStatic<int>("SDK_INT");
-        }*/
+            t = tex.GetComponent<TextMeshProUGUI>();
+        }
     }
 }

@@ -1,133 +1,146 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 using TMPro;
-using System;
-using UnityEngine.UI;
 
-
+/// <summary>
+/// Manages real-time altitude, timer, and therapy condition HUD in Acrophobia.
+/// Optimized to cache components and eliminate null-reference paths.
+/// </summary>
 public class ValChange : MonoBehaviour
-{ public  static int hi;
-public static int hf;
-int condition;
-public static int min;
+{
+    public static int hi;
+    public static int hf;
+    public static int min;
     public static float HighestHigh = 0;
-    // int flag;
+
     public GameObject Timeobj;
     public GameObject Heigh;
     public GameObject Headwait;
     public GameObject waitstill;
     public GameObject focusnf;
     public GameObject cam;
+
     private TextMeshProUGUI timee;
     private TextMeshProUGUI heig;
     private TextMeshProUGUI waisti;
     private TextMeshProUGUI headait;
     private TextMeshProUGUI focun;
-    public static string s1;
-    string s2;
-    string s3;
-    string s4;
-    //public static string t1;
 
-    //timetxt = Timeobj.GetComponent<TextMeshPro>().text.Replace;
-    // Start is called before the first frame update
+    public static string s1 = "0 sec";
+    private string s2 = "0";
+    private string s3 = "0";
+    private string s4 = "0";
+    private int condition = 3;
+
     void Start()
-    {   
-        timee= Timeobj.GetComponent<TextMeshProUGUI>();
-        heig= Heigh.GetComponent<TextMeshProUGUI>();
-        focun= focusnf.GetComponent<TextMeshProUGUI>();
-        waisti= waitstill.GetComponent<TextMeshProUGUI>();
-        headait= Headwait.GetComponent<TextMeshProUGUI>();
-        hi = (int)cam.transform.position.y;
+    {
+        if (Timeobj != null) timee = Timeobj.GetComponent<TextMeshProUGUI>();
+        if (Heigh != null) heig = Heigh.GetComponent<TextMeshProUGUI>();
+        if (focusnf != null) focun = focusnf.GetComponent<TextMeshProUGUI>();
+        if (waitstill != null) waisti = waitstill.GetComponent<TextMeshProUGUI>();
+        if (Headwait != null) headait = Headwait.GetComponent<TextMeshProUGUI>();
+
+        if (cam == null && Camera.main != null)
+        {
+            cam = Camera.main.gameObject;
+        }
+
+        if (cam != null)
+        {
+            hi = (int)cam.transform.position.y;
+        }
     }
-    //Debug.Log(Tim.ToString());
-    //  string s = Tim.ToString();
-    //timetxt.SetText(s);
-    // Update is called once per frame
+
     void Update()
     {
-        if(vrlook.e!=1)f();
-        timee.text =s1;
-        h();
-        heig.text = s2;
-        w();
-        waisti.text=s3;
-        if (condition == 3) {
-           
-            waisti.color =new Color(1,1,1,1);
-            headait.color =new Color(1, 1, 1, 1);
-        }
-        else if (condition == 2) {
-            
-            waisti.color =new Color(239,183,0,255); 
-            headait.color =new Color(239,183,0,255); 
-        }
-        else if (condition == 1) {
-           
-            waisti.color =new Color32(184,29,19,255); 
-            headait.color =new Color32(184,29,19,255); 
-        }
-        fs();
-        focun.text = s4;
+        if (vrlook.e != 1) FormatTime();
+        if (timee != null) timee.text = s1;
+
+        CalculateHeight();
+        if (heig != null) heig.text = s2;
+
+        CalculateWaitTime();
+        if (waisti != null) waisti.text = s3;
+
+        UpdateColors();
+
+        CalculateFocusTime();
+        if (focun != null) focun.text = s4;
     }
-    private void f()
+
+    private void FormatTime()
     {
         int ab = (int)vrlook.Tim;
-        int abc= ab%60;
+        int abc = ab % 60;
         min = ab / 60;
         if (min != 0)
         {
-            s1 = min.ToString() + " min " + abc.ToString() + " sec";
-        }
-        else { s1 = abc.ToString() + " sec"; }
-    }
-    private void h()
-    {
-        hf=(int)Math.Ceiling(cam.transform.position.y-hi)-1;
-        s2 = hf.ToString();
-        if (hf > HighestHigh) { HighestHigh = hf; Debug.Log("Height "+ hf); }
-            
-    }
-    private void w()
-    {
-        float abcd=vrlook.TTimeg - vrlook.Timer;
-        int aba = (int)Math.Ceiling(abcd);
-        if (abcd >= 0 && vrlook.started == 1)
-        {
-            s3 = aba.ToString();
-            //Debug.Log((abcd / vrlook.TTimeg) * 100);
-            if ((aba / vrlook.TTimeg) * 100 <= 30) condition = 1;
-            else if ((aba / vrlook.TTimeg) * 100 > 30) condition = 2;
-             if ((aba / vrlook.TTimeg) * 100 > 70) condition = 3;
+            s1 = $"{min} min {abc} sec";
         }
         else
         {
-            abcd = vrlook.TTimeg;
-            s3 = abcd.ToString();
-            condition = 3;
-        }
-        
-    }
-    private void fs()
-    {
-        float abcd = vrlook.TTimeg1 - vrlook.Timer1;
-        int aba = (int)Math.Ceiling(abcd);
-        if (aba >= 0 && vrlook.k == 1)
-        {
-            s4 = aba.ToString();
-           // flag = 1;
-        }
-        else
-        {
-           // if (abcd >= 0 && vrlook.k == 0 && flag!=1) { s4 = "Falling Focus Time!!";flag = 0; }
-          //  else
-           // {
-                abcd = (int)vrlook.TTimeg1;
-                s4 = abcd.ToString();
-             //   flag = 0;
-           // }
+            s1 = $"{abc} sec";
         }
     }
 
+    private void CalculateHeight()
+    {
+        if (cam == null) return;
+
+        hf = (int)Math.Ceiling(cam.transform.position.y - hi) - 1;
+        s2 = hf.ToString();
+        if (hf > HighestHigh)
+        {
+            HighestHigh = hf;
+        }
+    }
+
+    private void CalculateWaitTime()
+    {
+        float abcd = vrlook.TTimeg - vrlook.Timer;
+        int aba = (int)Math.Ceiling(abcd);
+
+        if (abcd >= 0 && vrlook.started == 1)
+        {
+            s3 = aba.ToString();
+            float ratio = (vrlook.TTimeg > 0) ? (aba / vrlook.TTimeg) * 100f : 100f;
+
+            if (ratio <= 30) condition = 1;
+            else if (ratio <= 70) condition = 2;
+            else condition = 3;
+        }
+        else
+        {
+            s3 = ((int)vrlook.TTimeg).ToString();
+            condition = 3;
+        }
+    }
+
+    private void UpdateColors()
+    {
+        Color targetColor = condition switch
+        {
+            1 => new Color32(184, 29, 19, 255), // Red - warning
+            2 => new Color32(239, 183, 0, 255), // Yellow - caution
+            _ => Color.white
+        };
+
+        if (waisti != null) waisti.color = targetColor;
+        if (headait != null) headait.color = targetColor;
+    }
+
+    private void CalculateFocusTime()
+    {
+        float abcd = vrlook.TTimeg1 - vrlook.Timer1;
+        int aba = (int)Math.Ceiling(abcd);
+
+        if (aba >= 0 && vrlook.k == 1)
+        {
+            s4 = aba.ToString();
+        }
+        else
+        {
+            s4 = ((int)vrlook.TTimeg1).ToString();
+        }
+    }
 }

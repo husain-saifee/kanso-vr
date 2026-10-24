@@ -1,19 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Legacy orientation locker.
+/// Disabled for VR headsets to maintain correct stereo horizontal projection.
+/// </summary>
 public class orientation : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        Screen.orientation = ScreenOrientation.Portrait;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        if (Screen.orientation != ScreenOrientation.Portrait)
-        { Screen.orientation = ScreenOrientation.Portrait; }
-    }
+    // No-op in modern VR
 }

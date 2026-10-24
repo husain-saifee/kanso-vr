@@ -1,22 +1,22 @@
-﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 
+/// <summary>
+/// Handles social external URLs and review feedback emails.
+/// Migrated from obsolete WWW.EscapeURL to UnityWebRequest.EscapeURL.
+/// </summary>
 public class FOLLOW : MonoBehaviour
 {
-    // Start is called before the first frame update
     public void GITHUB()
     {
         Application.OpenURL("http://www.github.com/manipta");
+    }
 
-
-    } 
     public void INSTA()
     {
         Application.OpenURL("http://www.instagram.com/wga_developer/");
-        
-    } 
-    
+    }
+
     public void Gmail()
     {
         string email = "manigarg2002@gmail.com";
@@ -24,8 +24,9 @@ public class FOLLOW : MonoBehaviour
         string body = MyEscapeURL("AppName: DePhobia\nName:\nAddress:\n");
         Application.OpenURL("mailto:" + email + "?subject=" + subject + "&body=" + body);
     }
-    string MyEscapeURL(string url)
+
+    private string MyEscapeURL(string url)
     {
-        return WWW.EscapeURL(url).Replace("+", "%20");
+        return UnityWebRequest.EscapeURL(url).Replace("+", "%20");
     }
 }

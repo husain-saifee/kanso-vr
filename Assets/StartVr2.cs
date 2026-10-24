@@ -1,79 +1,56 @@
-﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.XR;
-using UnityEngine.SceneManagement;
-using System.IO;
+using DePhobia.Core;
+using DePhobia.VR;
 
+/// <summary>
+/// Scene lifecycle controller for Aquaphobia simulation.
+/// Initializes the patient session, manages the VR Player Rig, and records stats.
+/// </summary>
 public class StartVr2 : MonoBehaviour
 {
-    // Start is called before the first frame update
-    public void Start()
+    private void Start()
     {
-      
-        StartCoroutine(EnableVr("cardboard"));
+        PatientSessionManager.Instance.StartSession("Aquaphobia");
+
+        // Ensure VR Rig exists in scene
+        var rig = FindObjectOfType<VRPlayerRig>();
+        if (rig == null)
+        {
+            var rigGo = new GameObject("VRPlayerRig");
+            rig = rigGo.AddComponent<VRPlayerRig>();
+            var cam = Camera.main;
+            if (cam != null)
+            {
+                cam.transform.SetParent(rigGo.transform, false);
+                rig.headCamera = cam.transform;
+            }
+        }
+
+        // Fade in from black smoothly
+        VRFadeManager.Instance.FadeIn(0.5f);
     }
 
-    public IEnumerator EnableVr(string VRi)
+    private void Update()
     {
-        // Empty string loads the "None" device.
-        XRSettings.LoadDeviceByName(VRi);
-        // Must wait one frame after calling `XRSettings.LoadDeviceByName()`.
-        yield return null;
-        // Not needed, since loading the None (`""`) device takes care of 
-        XRSettings.enabled = true;
-    }
-    public void Update()
-    {
-       if (Application.platform == RuntimePlatform.Android)
+        // Keyboard Escape or Controller Menu opens Pause Menu / Saves Session
+        if (Input.GetKeyDown(KeyCode.Escape))
         {
-            if (Input.GetKeyUp(KeyCode.Escape))
+            var pauseMenu = FindObjectOfType<VRInGamePauseMenu>();
+            if (pauseMenu != null)
             {
-               
-                CreateText();
-                SceneManager.LoadScene(0);
-                return;
+                pauseMenu.Pause();
+            }
+            else
+            {
+                SaveAndReturn();
             }
         }
     }
-    void CreateText()
+
+    public void SaveAndReturn()
     {
-        string path = Application.persistentDataPath + "/PersonStats";
-        if (Directory.Exists(path) == false)
-        {
-            Directory.CreateDirectory(path);
-        }
-        string path2 = path + "/AquaStats.txt";
-        if (File.Exists(path2) == false)
-        {
-            File.WriteAllText(path2, "Date\t\tTime\t\tTime Elapsed  Speed  WaterMoveAfter  WaterMoveDur\n\n");
-        }
-
-        string s1;
-        float min;
-        int ab = (int)MoreHeight1.time;
-        int abc = ab % 60;
-        min = ab / 60;
-        string content1;
-        if (min != 0)
-        {
-            s1 = min.ToString() + " min " + abc.ToString() + " sec";
-            content1 = System.DateTime.Now + "\t" + s1+"\t";
-        }
-        else
-        {
-            s1 = abc.ToString() + " sec";
-            if (abc < 10)
-            {
-                content1 = System.DateTime.Now + "\t" + s1 + "\t\t\t ";
-            }
-            else { content1 = System.DateTime.Now + "\t" + s1 + "\t\t "; }
-        }
-
-
-        
-        string content2 = Getval1.watspeed + "            " + Getval1.watermovetime + "\t\t\t" + Getval1.watermoveduration + "\t\t"+ " \n";
-        File.AppendAllText(path2, content1 + content2);
+        string summary = $"WaterSpeed: {TherapySettingsManager.Instance.aquaWaterSpeed:F3}, WaterRiseAfter: {TherapySettingsManager.Instance.aquaRiseAfter:F1}s";
+        PatientSessionManager.Instance.EndAndSaveSession(completed: false, extraParams: summary);
+        VRFadeManager.Instance.FadeAndLoadScene(0, 0.4f);
     }
-
 }

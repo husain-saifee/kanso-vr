@@ -1,47 +1,115 @@
-# DePhobia
-A VR Android Application based on Exposure Therapy for Phobias. It includes three Simulations, each for Claustrophobia, Aquaphobia, and Acrophobia, respectively. This Project is done in Unity 3D.
+# DePhobia — VR Exposure Therapy Platform
 
+[![Unity](https://img.shields.io/badge/Unity-2022.3%20LTS-blue.svg)](https://unity.com/)
+[![OpenXR](https://img.shields.io/badge/Standard-OpenXR-green.svg)](https://www.khronos.org/openxr/)
+[![Platforms](https://img.shields.io/badge/Platforms-Meta%20Quest%20|%20PCVR%20|%20Pico-orange.svg)](#supported-platforms)
 
-_A Video Describing Idea Behind Application:_ <a href="https://drive.google.com/drive/folders/17_NIxqbx-Wzjtl68NFbTPUTSNL4rCf_T?usp=sharing">Click Here</a>
+**DePhobia** is an immersive virtual reality exposure therapy application designed to assist individuals in confronting and managing common phobic disorders through structured, progressive, and safe interactive simulations.
 
-![DePhobia (2)](https://user-images.githubusercontent.com/72307020/153747421-12d0cd53-f263-4e62-bff8-a092c5814a86.png)
+Developed with **Unity 2022.3 LTS** and built on the cross-platform **OpenXR** industry standard with the **XR Interaction Toolkit (XRI)**.
 
-# Installation
-Just download apk and install it on your Android Mobile.\
-Also Available on <a href="https://www.amazon.in/MG-Games-DePhobia/dp/B0C9M87DLX/ref=sr_1_1?keywords=dephobia&s=mobile-apps&sr=1-1">Amazon App Store (Latest Version)</a>\
-**Note: Please Allow to "Install from unknown Resources"(if trigger).**
-# Details of each Simulator
-## **ClaustroPhobia**   
-The Claustrophobic Patient is afraid of being in a closed room. So, In this Simulation, the User is placed in a closed room, having no windows and no door. The person can move inside the room but can't go outside. The room size also starts to decrease with time. Chillax!! , it will not Crush you. The settings regarding this can be set by the User in the settings menu. All the data on how long a person stayed in the room, how many times the wall moved, and on what settings will be saved on pressing the back button. This data can be seen by pressing ***status icon***. <img src="https://user-images.githubusercontent.com/72307020/153742762-377a6d8a-86b6-454e-b5b3-d7d9a9695e6b.png" width="20" height="20">
+---
 
-#### <ins>Terms used:</ins>  
-***Speed of Wall:*** It is how fast walls will move towards the person.  
-***Wall Move After:*** It is the time duration after which the wall starts to move.  
-***Wall Move Duration:*** It is time duration for which wall moves and then stops after that.
+## 🧠 Exposure Therapy Simulations
 
-## **AquaPhobia**   
-In this Simulation, the User is landed on an Island(surrounded by water all around).The person can move on the Island, but can't inside the Water.The person will not go inside the water, but the water level increases with Time,hmm....Relax, it is safe.The User can set the settings regarding this in settings menu. All the data on how long person stayed in-game and on what settings will be saved on pressing back button. Again, this data can be seen by pressing ***status icon***. <img src="https://user-images.githubusercontent.com/72307020/153742762-377a6d8a-86b6-454e-b5b3-d7d9a9695e6b.png" width="20" height="20">
+### 1. 🚪 Claustrophobia (Fear of Enclosed Spaces)
+- **Environment:** An enclosed room without external windows or doors.
+- **Therapeutic Progression:** The walls progressively and steadily contract inward towards the patient based on clinical parameters (speed, contraction interval, and movement duration).
+- **Therapeutic Goal:** Patients practice controlled breathing and distress tolerance in a confined space.
+- **Safety Boundary:** Walls automatically stop at a safe physical boundary, preventing room collapse or physical clipping.
 
-#### <ins>Terms used:</ins>  
-***Water Rise Rate:*** It is same as "speed of wall", but this time water will rise with this speed.  
-***Water Rise After:*** It is the same as "Wall Move After" but water will rise after this time duration.\
-***Wall Rise Duration:***  It is the same as "Wall Move Duration",but, this time water will rise for this time duration.
+### 2. 🌊 Aquaphobia (Fear of Water)
+- **Environment:** A tranquil tropical island surrounded by ocean tides.
+- **Therapeutic Progression:** Water levels steadily rise over time according to custom timing parameters.
+- **Therapeutic Goal:** Controlled gradual exposure to encroaching water in a scenic, non-threatening environment.
+- **Safety Boundary:** Maximum water elevation is clamped to a safe threshold.
 
-## **AcroPhobia**   
-This is my Favorite Part :) In this Simulation, the User has a Hoverboard(This is my first Project,So, don't Expect much :/  ).Initially, it has a height. You will neither fall from Hoverboard nor fall below that height. The person has to see downwards.The idea is that if the person doesn't see downward for a given *wait time* duration, then the Hoverboard moves downwards, and on seeing down for a particular Time, it goes up.The wait time changes on reaching some particular Level. There is a max reach level, after which you find something interesting :) The settings regarding Initial *Wait Time* and *Still Focus Time* can be set by the User in settings menu. All the data on how long a person stayed in-game, Max Height Reached, and on what settings will be saved on pressing the back button. Again, this data can be seen by pressing ***status icon***. <img src="https://user-images.githubusercontent.com/72307020/153742762-377a6d8a-86b6-454e-b5b3-d7d9a9695e6b.png" width="20" height="20">
+### 3. 🏙️ Acrophobia (Fear of Heights)
+- **Environment:** An open hoverboard suspended hundreds of meters above a bustling metropolitan city.
+- **Therapeutic Mechanic:** 
+  - **Confronting Fear:** When the patient looks downward into the abyss (gaze pitch 30°–85°), the hoverboard rewards exposure by ascending smoothly into the sky.
+  - **Avoidance / Fear Response:** If the patient looks away or glances upward for longer than the configured wait duration, the hoverboard pauses ascension and begins descending until the patient refocuses.
+  - **Peak Altitude:** Upon reaching 360m, a session conclusion sequence activates with celebratory visual feedback.
+- **Safety Boundary:** The hoverboard is clamped above ground level (`y >= 27.04m`), completely eliminating accidental free-fall.
 
+---
 
-#### <ins>Terms used:</ins>  
-***Wait Time:*** It is how long a person can stay without looking down.  
-***Still Focus Time:*** It is how long a person has to see downwards for going upwards.\
-***Fall Focus Time:*** It is the same as Still Focus Time, but it comes into play when HoverBoard falls or goes downwards. Its value is Fixed 0.6 sec.
+## 🎮 Controls & Interaction
 
-# Icons and Sound Credits
-*Icons:* <a href="https://www.flaticon.com/free-icons/health" title="health icons">Health icons created by Freepik - Flaticon</a> \
-*sound:* <a href="https://www.bensound.com">Bensound</a>
+### VR Headsets (Meta Quest 2/3, Pico, SteamVR / PCVR)
+| Action | Controller Input |
+| :--- | :--- |
+| **Locomotion** | **Left Thumbstick** (Smooth movement) |
+| **Turning** | **Right Thumbstick** (Snap turn by default; 45° increments) |
+| **UI Interaction** | **Right Trigger / Index Grip** (Ray Pointer) |
+| **Pause & Safety Menu** | **Left Menu Button / Y Button** (Toggles 3D Floating Pause Menu) |
+| **Emergency Rescue** | Look at or point to the **In-World Emergency Exit Beacon** |
+| **Acrophobia Gaze** | Tilt head downward to ascend; look forward/away to descend |
 
-## 🔗 **Follow Me**
-[![portfolio](https://img.shields.io/badge/my_portfolio-red?style=for-the-badge&logo=ko-fi&logoColor=white)](https://bit.ly/mani_garg)[![linkedin](https://img.shields.io/badge/linkedin-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/manigargpta/)
-[![twitter](https://img.shields.io/badge/medium-000?style=for-the-badge&logo=medium&logoColor=white)](https://medium.com/@manipta)
+### Desktop / Editor Testing Fallback (No Headset Required)
+| Action | Keyboard / Mouse Input |
+| :--- | :--- |
+| **Movement** | `W`, `A`, `S`, `D` or Arrow Keys |
+| **Turning** | `Q` (Turn Left) / `E` (Turn Right) or Mouse X |
+| **Pause / Exit** | `Escape` or `P` key |
+| **Interact / Click** | Left Mouse Click |
 
+---
 
+## 🛡️ Patient Safety & VR Comfort Features
+
+- **FOV Tunneling Vignette:** Dynamic peripheral darkening during rapid locomotion or altitude changes eliminates vestibular motion sickness.
+- **Snap Turn & Smooth Turn:** Customizable turning mode with configurable turn angle (30° / 45°).
+- **In-Game Pause System:** Patients can pause the simulation at any point to view elapsed time and resume or exit safely.
+- **Physical Emergency Exit Beacon:** An in-world beacon is positioned in every simulation, enabling immediate session termination without complex menu navigation.
+- **Gentle Screen Fades:** All scene transitions utilize smooth VR fade-to-black sequences to prevent visual jarring and headset lag disorientation.
+
+---
+
+## 📊 Patient Data & Session Persistence
+
+Session outcomes and therapy parameters are automatically tracked and saved:
+- **Storage:** Persisted locally as structured JSON data (`session_history.json`) in `Application.persistentDataPath/PersonStats/`.
+- **Metrics Tracked:** Session timestamp, duration, peak metrics (altitude reached, wall contraction cycles), completion status, and parameters used.
+- **History Viewer:** Past therapy sessions are displayed in a clean table within the Main Menu.
+- **Backwards Compatibility:** Legacy formatted text files (`ClausStats.txt`, `AquaStats.txt`, `AcroStats.txt`) are generated concurrently.
+
+---
+
+## 🚀 Setup & Build Instructions
+
+### Prerequisites
+- **Unity 2022.3 LTS** (e.g. `2022.3.40f1` or newer)
+- **Modules Required:**
+  - Android Build Support (OpenXR Standalone for Meta Quest / Pico)
+  - Windows Build Support (for PCVR / SteamVR)
+
+### Project Configuration
+1. Open the project in Unity 2022.3 LTS via Unity Hub.
+2. In **Project Settings > XR Plug-in Management**:
+   - Enable **OpenXR** under Android and Standalone tabs.
+   - In **OpenXR Feature Groups**, enable **Meta Quest Support** (Android) and **Oculus / SteamVR** (PC).
+3. In **Project Settings > Player**:
+   - Color Space: **Linear** (verified in `ProjectSettings.asset`).
+   - Android Target Architecture: **ARM64** (v8a).
+   - Minimum API Level: **Android 8.0 (API level 26)**.
+
+### Build Scenes Order
+All 4 scenes are pre-configured in `EditorBuildSettings.asset`:
+- `0`: `Assets/Menu/Menu.unity`
+- `1`: `Assets/Room/scenes/the last revelation.unity` (Claustrophobia)
+- `2`: `Assets/Snowconesolid Assets/Super Beach Pack/Scenes/Island Example 3.unity` (Aquaphobia)
+- `3`: `Assets/Geopipe/Pack01Demo/Pack01Demo01.unity` (Acrophobia)
+
+---
+
+## 📄 Documentation
+- [AUDIT_REPORT.md](AUDIT_REPORT.md) — Comprehensive technical audit of legacy systems.
+- [PLAN.md](PLAN.md) — Architectural modernization and repair plan.
+- [CHANGELOG_AI.md](CHANGELOG_AI.md) — Detailed ledger of all code changes.
+- [THIRD_PARTY_ASSETS.md](THIRD_PARTY_ASSETS.md) — Asset licenses and credits.
+
+---
+
+## ⚖️ License
+Educational and clinical research platform. Third-party assets are subject to their respective licenses detailed in [THIRD_PARTY_ASSETS.md](THIRD_PARTY_ASSETS.md).

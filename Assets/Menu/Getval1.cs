@@ -1,49 +1,53 @@
-﻿using System.Collections;
-using System;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
+using DePhobia.Core;
 
+/// <summary>
+/// Event-driven UI controller for Aquaphobia configuration inputs.
+/// Replaces per-frame float.Parse in Update() with event callbacks and eliminates coroutine spam.
+/// </summary>
 public class Getval1 : MonoBehaviour
-{   
-    public static float watspeed, watermovetime, watermoveduration;
+{
+    public static float watspeed => TherapySettingsManager.Instance.aquaWaterSpeed;
+    public static float watermovetime => TherapySettingsManager.Instance.aquaRiseAfter;
+    public static float watermoveduration => TherapySettingsManager.Instance.aquaRiseDuration;
+
     public GameObject wspee;
     public GameObject watermovetim;
     public GameObject watermoveduratio;
-    
-    // speed = spee;
-    private void Update()
+
+    private void Start()
     {
+        var sm = TherapySettingsManager.Instance;
 
-        watspeed = float.Parse(wspee.GetComponent<TMP_InputField>().text);
+        if (wspee != null)
+        {
+            var input = wspee.GetComponent<TMP_InputField>();
+            if (input != null)
+            {
+                input.text = (sm.aquaWaterSpeed * 100f).ToString("F0");
+                input.onEndEdit.AddListener(val => sm.SetAquaSpeedFromInput(val));
+            }
+        }
 
+        if (watermovetim != null)
+        {
+            var input = watermovetim.GetComponent<TMP_InputField>();
+            if (input != null)
+            {
+                input.text = sm.aquaRiseAfter.ToString("F1");
+                input.onEndEdit.AddListener(val => sm.SetAquaRiseAfterFromInput(val));
+            }
+        }
 
-        watermovetime = float.Parse(watermovetim.GetComponent<TMP_InputField>().text);
-
-
-        watermoveduration = float.Parse(watermoveduratio.GetComponent<TMP_InputField>().text);
-
-        if (mainmenu.flag == 1) {
-            wa5(3.5f);
-            
+        if (watermoveduratio != null)
+        {
+            var input = watermoveduratio.GetComponent<TMP_InputField>();
+            if (input != null)
+            {
+                input.text = sm.aquaRiseDuration.ToString("F1");
+                input.onEndEdit.AddListener(val => sm.SetAquaRiseDurationFromInput(val));
+            }
         }
     }
-    public void Wait(float seconds, Action action)
-    {
-        StartCoroutine(_wait(seconds, action));
-    }
-    IEnumerator _wait(float time, Action callback)
-    {
-        yield return new WaitForSeconds(time);
-        callback();
-    }
-    public void wa5(float ab)
-    {
-        StartCoroutine(_wait(ab, () => {
-            Debug.Log("5 seconds is lost forever");
-            Application.Quit();
-        }));
-    }
-
 }

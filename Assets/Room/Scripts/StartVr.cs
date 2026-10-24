@@ -1,69 +1,67 @@
-﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.XR;
-using UnityEngine.SceneManagement;
-using System.IO;
+using DePhobia.Core;
+using DePhobia.VR;
 
+/// <summary>
+/// Scene lifecycle controller for Claustrophobia simulation.
+/// Initializes the patient session, manages the VR Player Rig, and records stats.
+/// </summary>
 public class StartVr : MonoBehaviour
 {
-    // Start is called before the first frame update
-    public void Start()
+    private void Start()
     {
-        StartCoroutine(EnableVr("cardboard"));
+        PatientSessionManager.Instance.StartSession("Claustrophobia");
+
+        // Ensure VR Rig exists in scene
+        var rig = FindObjectOfType<VRPlayerRig>();
+        if (rig == null)
+        {
+            var rigGo = new GameObject("VRPlayerRig");
+            rig = rigGo.AddComponent<VRPlayerRig>();
+            var cam = Camera.main;
+            if (cam != null)
+            {
+                cam.transform.SetParent(rigGo.transform, false);
+                rig.headCamera = cam.transform;
+            }
+        }
+
+        // Fade in from black smoothly
+        VRFadeManager.Instance.FadeIn(0.5f);
     }
 
-    public IEnumerator EnableVr(string VRi)
+    private void Update()
     {
-        // Empty string loads the "None" device.
-        XRSettings.LoadDeviceByName(VRi);
-        // Must wait one frame after calling `XRSettings.LoadDeviceByName()`.
-        yield return null;
-        // Not needed, since loading the None (`""`) device takes care of 
-        XRSettings.enabled = true;
-    }
-    public void Update()
-    {
-       if (Application.platform == RuntimePlatform.Android)
+        // Update peak metric (wall movement cycle count)
+        float cycleDuration = TherapySettingsManager.Instance.clausMoveDuration + TherapySettingsManager.Instance.clausMoveAfter;
+        if (cycleDuration > 0.1f)
         {
-            if (Input.GetKeyUp(KeyCode.Escape))
+            float wallCycles = xnegmove.tmeas / cycleDuration;
+            PatientSessionManager.Instance.UpdatePeakMetric(wallCycles);
+        }
+
+        // Keyboard Escape or Controller Menu opens Pause Menu / Saves Session
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            var pauseMenu = FindObjectOfType<VRInGamePauseMenu>();
+            if (pauseMenu != null)
             {
-                CreateText();
-                SceneManager.LoadScene(0);
-                return;
+                pauseMenu.Pause();
+            }
+            else
+            {
+                SaveAndReturn();
             }
         }
     }
-    void CreateText()
-    {
-        string path =Application.persistentDataPath +"/PersonStats";
-        if (Directory.Exists(path) == false)
-        {
-            Directory.CreateDirectory(path);
-        }
-        string path2 = path + "/ClausStats.txt";
-        if (File.Exists(path2) == false)
-        {
-            File.WriteAllText(path2, "Date\t\tTime\t\tTime Elapsed  Speed  WallMoveAfter  WallMoveDur WallMoveCount\n\n");
-        }
-        int count = (int)(xnegmove.tmeas / (Getval.wallmoveduration + Getval.wallmovetime));
-        string s1;
-        float min;
-        int ab = (int)xnegmove.tmeas;
-        int abc = ab % 60;
-        min = ab / 60;
-        string content1;
-        if (min != 0)
-        {
-            s1 = min.ToString() + " min " + abc.ToString() + " sec";
-            content1 = System.DateTime.Now + "\t" + s1+"  \t\t";
-        }
-        else { s1 = abc.ToString() + " sec";
-            content1 = System.DateTime.Now + "\t" + s1 + "  \t\t";
-        }
 
-        string content2= Getval.speed + "          " + Getval.wallmovetime+ "\t\t\t"+Getval.wallmoveduration + "\t\t" + count + "\n";
-        File.AppendAllText(path2, content1+content2);
+    public void SaveAndReturn()
+    {
+        float cycleDuration = TherapySettingsManager.Instance.clausMoveDuration + TherapySettingsManager.Instance.clausMoveAfter;
+        int count = (cycleDuration > 0.1f) ? (int)(xnegmove.tmeas / cycleDuration) : 0;
+        string summary = $"Speed: {TherapySettingsManager.Instance.clausSpeed:F3}, Cycles: {count}";
+
+        PatientSessionManager.Instance.EndAndSaveSession(completed: false, extraParams: summary);
+        VRFadeManager.Instance.FadeAndLoadScene(0, 0.4f);
     }
-  
 }

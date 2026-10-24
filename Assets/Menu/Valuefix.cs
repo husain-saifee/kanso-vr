@@ -1,35 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
+
+/// <summary>
+/// Legacy input validation script.
+/// Replaced by TherapySettingsManager event listeners.
+/// Preserved as no-op to prevent missing script references in scenes.
+/// </summary>
 public class Valuefix : MonoBehaviour
 {
     public GameObject a1;
-
-    private string s1;
     public string t1;
-  
-  
-
-    void Start()
-    {
-
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        s1 = a1.GetComponent<TMP_InputField>().text;
-        
-
-           if (s1=="")
-            {
-              
-                a1.GetComponent<TMP_InputField>().text=t1;
-             }
-        
-    }
-
-
 }
