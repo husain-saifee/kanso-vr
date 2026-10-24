@@ -1,4 +1,4 @@
-# DePhobia — Tone of Voice & Copy Guide
+# Kanso VR — Tone of Voice & Copy Guide
 
 **Status:** Approved Reference  
 **Audience:** Patients, Clinical Therapists, Researchers  

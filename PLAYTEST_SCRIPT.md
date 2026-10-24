@@ -1,4 +1,4 @@
-# DePhobia — 20-Minute Human Playtest Script (`PLAYTEST_SCRIPT.md`)
+# Kanso VR — 20-Minute Human Playtest Script (`PLAYTEST_SCRIPT.md`)
 
 **Target Platforms:** Meta Quest 2 / 3 / Pro (OpenXR Standalone) & PCVR (SteamVR / Link)  
 **Tester Profile:** Experience Designer, Clinical Therapist, or QA Tester  

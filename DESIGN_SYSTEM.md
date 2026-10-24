@@ -1,4 +1,4 @@
-# DePhobia — Design System: Soft & Abstract Horizon (Direction C)
+# Kanso VR — Design System: Soft & Abstract Horizon (Direction C)
 
 **Version:** 1.0.0  
 **Status:** Approved Source of Truth  
@@ -9,7 +9,7 @@
 
 ## 1. Core Vision & Psychological Framing
 
-DePhobia is designed as a calm, composable, and emotionally safe exposure therapy environment. It provides structured, predictable exposure to phobic stimuli without spectacle, pressure, or gamified stress.
+Kanso VR is designed as a calm, composable, and emotionally safe exposure therapy environment. It provides structured, predictable exposure to phobic stimuli without spectacle, pressure, or gamified stress.
 
 ### 1.1 Adjectives
 - **Must Evoke:** *Spacious*, *Unburdened*, *Atmospheric*, *Tranquil*, *Composed*.

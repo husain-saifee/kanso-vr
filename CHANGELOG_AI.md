@@ -1,6 +1,17 @@
 # CHANGELOG_AI.md
 
-This document tracks all changes made to the DePhobia codebase during modernization, repair, and feature completion.
+This document tracks all changes made to the Kanso VR (formerly DePhobia) codebase during modernization, repair, and feature completion.
+
+---
+
+## [1.0.0] - 2026-10-24: Kanso VR Identity, Legibility & GitHub Release Polish
+
+### Brand & Presentation Modernization
+- **High-Legibility ANSI Shadow ASCII Art**: Replaced clustered, uninterpretable ASCII art with crystal-clear ANSI Shadow block typography banner in README.md and BRAND_IDENTITY.md featuring subtitle [ 簡素 · Simplicity, Composure, and Psychological Safety ].
+- **Global Brand Alignment**: Replaced legacy prototype naming across README.md, BRAND_IDENTITY.md, ACCESSIBILITY.md, DESIGN_SYSTEM.md, TONE_OF_VOICE.md, PLAYTEST_SCRIPT.md, and THIRD_PARTY_ASSETS.md with the finalized brand name **Kanso VR**.
+- **Bulletproof In-Page Navigation**: Implemented explicit HTML anchor tags (#vision, #simulations, #architecture, #accessibility, #hardware, #privacy, #setup, #docs, #seo, #citation, #license) in README.md preventing broken links from GitHub emoji-slug filtering.
+- **Academic Citation & Schema**: Embedded BibTeX citation block directly in README.md alongside CITATION.cff and Schema.org SoftwareApplication JSON-LD.
+- **GitHub Repository Synchronization**: Updated repository description and homepage to reflect **Kanso VR** on https://github.com/husain-saifee/kanso-vr.
 
 ---
 

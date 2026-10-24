@@ -1,4 +1,4 @@
-# DePhobia — Accessibility & Comfort Compliance (`ACCESSIBILITY.md`)
+# Kanso VR — Accessibility & Comfort Compliance (`ACCESSIBILITY.md`)
 
 **Standard:** WCAG 2.2 (Level AA / AAA target) & W3C XR Accessibility User Requirements (XAUR)  
 **Branch:** `polish/experience`  
@@ -8,7 +8,7 @@
 
 ## 1. Overview & Accessibility Philosophy
 
-DePhobia is designed from the ground up for therapeutic use. Its users may be experiencing acute anxiety, panic symptoms, sensory processing differences, neurodivergence, or physical mobility limitations. Accessibility is not an afterthought or toggle; it is foundational to psychological safety.
+Kanso VR is designed from the ground up for therapeutic use. Its users may be experiencing acute anxiety, panic symptoms, sensory processing differences, neurodivergence, or physical mobility limitations. Accessibility is not an afterthought or toggle; it is foundational to psychological safety.
 
 ---
 

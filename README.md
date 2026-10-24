@@ -1,11 +1,14 @@
 <div align="center">
 
 ```
-       ___  __                        _   ______ 
-      / / |/ /___ _____  _________   | | / / __ \
-     / /|   // __ `/ __ \/ ___/ __ \ | |/ / /_/ /
-    / /   | / /_/ / / / (__  ) /_/ / | |/ / _, _/ 
-   /_/_/|_|_\__,_/_/ /_/____/\____/  |___/_/ |_|  
+██╗  ██╗ █████╗ ███╗   ██╗███████╗ ██████╗     ██╗   ██╗██████╗ 
+██║ ██╔╝██╔══██╗████╗  ██║██╔════╝██╔═══██╗    ██║   ██║██╔══██╗
+█████╔╝ ███████║██╔██╗ ██║███████╗██║   ██║    ██║   ██║██████╔╝
+██╔═██╗ ██╔══██║██║╚██╗██║╚════██║██║   ██║    ╚██╗ ██╔╝██╔══██╗
+██║  ██╗██║  ██║██║ ╚████║███████║╚██████╔╝     ╚████╔╝ ██║  ██║
+╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝ ╚═════╝       ╚═══╝  ╚═╝  ╚═╝
+
+          [ 簡素 · Simplicity, Composure, and Psychological Safety ]
 ```
 
 # Kanso VR (簡素)
@@ -13,28 +16,31 @@
 
 [![Unity 2022.3 LTS](https://img.shields.io/badge/Unity-2022.3%20LTS-000000.svg?style=for-the-badge&logo=unity&logoColor=white)](https://unity.com/)
 [![OpenXR Industry Standard](https://img.shields.io/badge/XR%20Standard-OpenXR-0072C6.svg?style=for-the-badge&logo=openxr&logoColor=white)](https://www.khronos.org/openxr/)
-[![Platforms](https://img.shields.io/badge/Platforms-Meta%20Quest%20|%20PCVR%20|%20Pico-FF5722.svg?style=for-the-badge&logo=oculus&logoColor=white)](#-hardware--platform-support)
+[![Platforms](https://img.shields.io/badge/Platforms-Meta%20Quest%20|%20PCVR%20|%20Pico-FF5722.svg?style=for-the-badge&logo=oculus&logoColor=white)](#hardware)
 [![Accessibility WCAG AAA](https://img.shields.io/badge/Accessibility-WCAG%202.2%20AAA-2E7D32.svg?style=for-the-badge&logo=w3c&logoColor=white)](ACCESSIBILITY.md)
-[![Privacy First](https://img.shields.io/badge/Privacy-Zero%20Telemetry-673AB7.svg?style=for-the-badge&logo=ghostery&logoColor=white)](#-privacy--zero-telemetry-guarantee)
+[![Privacy First](https://img.shields.io/badge/Privacy-Zero%20Telemetry-673AB7.svg?style=for-the-badge&logo=ghostery&logoColor=white)](#privacy)
 [![License: MIT](https://img.shields.io/badge/License-MIT-teal.svg?style=for-the-badge)](LICENSE)
 
 <br/>
 
 **Kanso VR** is an open-source, accessibility-first virtual reality exposure therapy (VRET) platform engineered for clinical healthcare, psychological research, and self-guided emotional regulation. Built from the ground up on the cross-platform **OpenXR** industry standard with **Unity 2022.3 LTS**.
 
-*Kanso* (簡素) embodies the Zen aesthetic of simplicity through the elimination of the non-essential: **no gamified pressure, no startle stimuli, no punitive failure states, and zero sensory overload.**
+*Kanso* (簡素) embodies the Zen aesthetic of simplicity through the intentional elimination of the non-essential: **no gamified pressure, no startle stimuli, no punitive failure states, and zero sensory overload.**
 
-[Core Vision](#-core-vision--zen-philosophy) •
-[Simulations](#-therapeutic-exposure-simulations) •
-[Architecture](#-therapeutic-flow--system-architecture) •
-[Accessibility](#-accessibility--human-factors-wcag-22-aaa) •
-[Quick Start](#-setup--quick-start-guide) •
-[Documentation](#-structured-documentation-suite)
+[Core Vision](#vision) •
+[Simulations](#simulations) •
+[Architecture](#architecture) •
+[Accessibility](#accessibility) •
+[Hardware Support](#hardware) •
+[Setup Guide](#setup) •
+[Documentation](#docs) •
+[Citation](#citation)
 
 </div>
 
 ---
 
+<a id="vision"></a>
 ## 🌿 Core Vision & Zen Philosophy
 
 Traditional virtual reality exposure simulations often borrow mechanics from consumer video games: ticking countdowns, flashing red warnings, loud sound effects, and performance scores. For a patient experiencing acute anxiety, panic disorder, or sensory processing sensitivities, these conventions spike autonomic nervous system arousal and induce trauma rather than healing.
@@ -48,6 +54,7 @@ Traditional virtual reality exposure simulations often borrow mechanics from con
 
 ---
 
+<a id="simulations"></a>
 ## 🧠 Therapeutic Exposure Simulations
 
 ```
@@ -71,6 +78,7 @@ Traditional virtual reality exposure simulations often borrow mechanics from con
 
 ---
 
+<a id="architecture"></a>
 ## 🔄 Therapeutic Flow & System Architecture
 
 ```mermaid
@@ -102,6 +110,7 @@ flowchart TD
 
 ---
 
+<a id="accessibility"></a>
 ## ♿ Accessibility & Human Factors (WCAG 2.2 AAA)
 
 Kanso VR is built strictly compliant with **W3C XR Accessibility User Requirements (XAUR)** and **WCAG 2.2 Level AAA**:
@@ -118,6 +127,7 @@ Kanso VR is built strictly compliant with **W3C XR Accessibility User Requiremen
 
 ---
 
+<a id="hardware"></a>
 ## 🎮 Hardware & Platform Support
 
 ### Headsets & OpenXR Runtimes
@@ -130,6 +140,7 @@ Kanso VR is built strictly compliant with **W3C XR Accessibility User Requiremen
 
 ---
 
+<a id="privacy"></a>
 ## 🔒 Privacy & Zero-Telemetry Guarantee
 
 Healthcare and therapeutic tools demand uncompromised patient confidentiality:
@@ -141,6 +152,7 @@ Healthcare and therapeutic tools demand uncompromised patient confidentiality:
 
 ---
 
+<a id="setup"></a>
 ## 🚀 Setup & Quick Start Guide
 
 ### Prerequisites
@@ -157,6 +169,7 @@ Ensure scenes are registered in `EditorBuildSettings.asset`:
 
 ---
 
+<a id="docs"></a>
 ## 📚 Structured Documentation Suite
 
 | Document | Purpose & Contents |
@@ -173,6 +186,7 @@ Ensure scenes are registered in `EditorBuildSettings.asset`:
 
 ---
 
+<a id="seo"></a>
 ## 🏷️ Search & AI Discoverability Metadata
 
 ```json
@@ -194,6 +208,24 @@ Ensure scenes are registered in `EditorBuildSettings.asset`:
 
 ---
 
+<a id="citation"></a>
+## 📜 Research Citation
+
+If you utilize Kanso VR in clinical research, academic studies, or software evaluations, please cite the platform:
+
+```bibtex
+@software{Saifee_Kanso_VR_2026,
+  author = {Saifee, Husain},
+  title = {{Kanso VR: An Accessibility-First, OpenXR Exposure Therapy Platform}},
+  year = {2026},
+  url = {https://github.com/husain-saifee/kanso-vr},
+  version = {1.0.0}
+}
+```
+
+---
+
+<a id="license"></a>
 ## ⚖️ License & Research Use
 
 Released under the permissive **[MIT License](LICENSE)**. Designed for clinical research, hospital environments, academic studies, and open-source health innovation.

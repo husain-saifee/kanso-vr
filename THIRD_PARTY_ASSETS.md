@@ -1,6 +1,6 @@
 # Third-Party Assets & Attribution
 
-This document catalogs third-party assets, packages, and audio files utilized within the DePhobia project in compliance with open licenses.
+This document catalogs third-party assets, packages, and audio files utilized within the Kanso VR project in compliance with open licenses.
 
 ---
 
