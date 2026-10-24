@@ -29,7 +29,12 @@ namespace DePhobia.VR
             canvasObj.transform.SetParent(transform, false);
 
             _canvas = canvasObj.AddComponent<Canvas>();
-            _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            _canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            if (_canvas.worldCamera == null)
+            {
+                _canvas.worldCamera = (Camera.main != null) ? Camera.main : GetComponentInParent<Camera>();
+            }
+            _canvas.planeDistance = 0.35f;
             _canvas.sortingOrder = 999;
 
             var imageObj = new GameObject("VignetteImage");
@@ -77,6 +82,11 @@ namespace DePhobia.VR
 
         private void Update()
         {
+            if (_canvas != null && _canvas.worldCamera == null && Camera.main != null)
+            {
+                _canvas.worldCamera = Camera.main;
+            }
+
             _currentAlpha = Mathf.MoveTowards(_currentAlpha, _targetAlpha, Time.deltaTime * fadeSpeed);
             if (_vignetteImage != null)
             {

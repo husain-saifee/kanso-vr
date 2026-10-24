@@ -83,3 +83,10 @@ This document tracks all changes made to the DePhobia codebase during modernizat
 ### Phase 6: Documentation & Licensing
 - Created `THIRD_PARTY_ASSETS.md` cataloging all third-party models, shaders, and audio assets.
 - Completely rewrote `README.md` with modern OpenXR setup, VR controls, and architecture overview.
+
+### Phase 7 & 8: VR Stereo Rendering Hardening & Deprecation Cleanup
+- **`Assets/Scripts/VR/VRFadeManager.cs` & `VRComfortVignette.cs`**:
+  - Replaced unsupported `RenderMode.ScreenSpaceOverlay` with `RenderMode.ScreenSpaceCamera`.
+  - Added dynamic stereo camera binding to `Camera.main` with calibrated plane distance (0.25m–0.35m) to ensure correct single-pass and multi-pass OpenXR stereo projection in both eyes without headset dropouts.
+- **`Assets/Water Float/Demo/Standard Assets/Editor/CrossPlatformInput/CrossPlatformInputInitialize.cs`**:
+  - Resolved `CS0618` deprecation warnings on `SetScriptingDefineSymbolsForGroup` / `GetScriptingDefineSymbolsForGroup` by adopting `NamedBuildTarget` on Unity 2021.2+.

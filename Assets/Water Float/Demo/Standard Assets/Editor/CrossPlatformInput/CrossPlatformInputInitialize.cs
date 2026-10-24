@@ -120,14 +120,22 @@ namespace UnityStandardAssets.CrossPlatformInput.Inspector
                     }
                 }
                 string definesString = string.Join(";", defines.ToArray());
+#if UNITY_2021_2_OR_NEWER
+                PlayerSettings.SetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget.FromBuildTargetGroup(group), definesString);
+#else
                 PlayerSettings.SetScriptingDefineSymbolsForGroup(group, definesString);
+#endif
             }
         }
 
 
         private static List<string> GetDefinesList(BuildTargetGroup group)
         {
+#if UNITY_2021_2_OR_NEWER
+            return new List<string>(PlayerSettings.GetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget.FromBuildTargetGroup(group)).Split(';'));
+#else
             return new List<string>(PlayerSettings.GetScriptingDefineSymbolsForGroup(group).Split(';'));
+#endif
         }
     }
 }

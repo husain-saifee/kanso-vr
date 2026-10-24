@@ -50,7 +50,12 @@ namespace DePhobia.VR
             canvasGo.transform.SetParent(transform);
 
             _fadeCanvas = canvasGo.AddComponent<Canvas>();
-            _fadeCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            _fadeCanvas.renderMode = RenderMode.ScreenSpaceCamera;
+            if (Camera.main != null)
+            {
+                _fadeCanvas.worldCamera = Camera.main;
+            }
+            _fadeCanvas.planeDistance = 0.25f;
             _fadeCanvas.sortingOrder = 9999;
 
             var imageGo = new GameObject("FadeOverlay");
@@ -97,6 +102,11 @@ namespace DePhobia.VR
 
         private void StartFade(float fromAlpha, float toAlpha, float duration, Action onComplete)
         {
+            if (_fadeCanvas != null && (_fadeCanvas.worldCamera == null || !_fadeCanvas.worldCamera.gameObject.activeInHierarchy) && Camera.main != null)
+            {
+                _fadeCanvas.worldCamera = Camera.main;
+            }
+
             if (_currentFadeRoutine != null)
                 StopCoroutine(_currentFadeRoutine);
 
