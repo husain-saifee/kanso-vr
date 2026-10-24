@@ -4,6 +4,64 @@ This document tracks all changes made to the DePhobia codebase during modernizat
 
 ---
 
+## [Unreleased] - Branch `polish/experience` (Quality, Feel & Accessibility Pass)
+
+### Phase 1: Whole-Experience Audit
+- Authored and delivered `EXPERIENCE_AUDIT.md`: severity-tagged audit across First-Run, Moment-to-Moment Feel, Failure Modes, Coherence, Audio, Accessibility, Comfort, Flow Structure, and Tone of Voice.
+- Discovered and cataloged critical P0 bugs: Acrophobia camera rig decoupling from hoverboard, startling car horn audio spikes at volume 1.4, flashing red countdown alerts, missing in-world emergency beacons, and Main Menu canvas disconnected by 700m from the camera.
+
+### Phase 2: Design System & Calibration (Direction C: Soft & Abstract Horizon)
+- Created `DESIGN_SYSTEM.md`: codified Direction C aesthetic (Dusk Lavender, Dawn Amber, Deep Twilight Surfaces), WCAG 2.2 AAA contrast standards (14.8:1), typography scale, motion language (`breathe`, `settle`, `acknowledge`), and acoustic hierarchy.
+- Authored `TONE_OF_VOICE.md`: established non-shaming, non-clinical, supportive second-person copy standards and eliminated all medical/efficacy claims.
+
+### Phase 3 & 4: Feel, Responsiveness & VR Rig Anchoring
+- **`Assets/Scripts/VR/VRPlayerRig.cs`**:
+  - Resolved Acrophobia decoupling bug by properly anchoring `VRPlayerRig` as a child of the hoverboard platform, and introduced `enableLocomotion` and `enableGravity` flags to prevent falling off the board.
+  - Added universal OpenXR controller input shortcuts (`CommonUsages.menuButton`, `CommonUsages.secondaryButton` Y/B, and thumbstick click for recenter).
+  - Added gentle informational haptic impulses via `SendHapticImpulse()`.
+  - Added dynamic seated mode eye-level compensation (`+0.35m`) and horizontal yaw recentering (`RecenterView()`).
+- **`Assets/Scripts/VR/VRWorldSpaceCanvasHelper.cs`**:
+  - Fixed world-space canvas positioning bug by dynamically computing canvas arrival position directly in front of `Camera.main` at 1.8m eye level, eliminating the 700m offset bug.
+
+### Phase 5: Audio Design & Subtitle Architecture
+- **`Assets/Scripts/Core/TherapyAudioManager.cs`**:
+  - Implemented procedural 432 Hz harmonic ambient drone synthesis in C# (warm, continuous cosine envelope, zero loop seams, 100% royalty-free CC0).
+  - Implemented procedural acoustic chime clicks (<40ms) for UI feedback.
+  - Created global subtitle/caption event bus.
+- **`Assets/Scripts/VR/TherapyCaptionUI.cs`**:
+  - World-space subtitle banner anchored in lower third of user field of view for deaf/hard-of-hearing accessibility.
+- **Audio Cleanup Across Simulations**:
+  - In `vrlook.cs`: Permanently disabled startling car and truck horn honks (`mixkit-car-horn-718`, `720`, `1565`, `CarHornDopplerBy PE865405`).
+  - In `StartVr.cs`: Muted mechanical hard-drive grinding audio.
+  - In `mainmenu.cs`: Softened upbeat acoustic ukulele track.
+
+### Phase 6: Accessibility, Comfort & Emergency Systems
+- **`Assets/Scripts/VR/VREmergencyExitBeacon.cs`**:
+  - Overhauled with Direction C styling (soft lavender/rose card, non-shaming copy: *"Return to Menu"* / *"Hold gaze or tap to exit safely"*).
+  - Added `EnsureBeaconInScene()` auto-spawner ensuring an in-world rescue anchor is present in all therapy scenes.
+- **`Assets/Scripts/VR/VRInGamePauseMenu.cs`**:
+  - Overhauled with Direction C surface palette and supportive copy (*"You are in control. Take all the time you need"*).
+  - Added Recenter View and Seated/Standing Mode quick toggles; replaced harsh red exit button with gentle rose tone (`#D48D8D`).
+- Authored `ACCESSIBILITY.md`: documented full WCAG 2.2 AAA contrast compliance, multi-modal presentation, seated mode calibration, and vestibular comfort measures.
+
+### Phase 7 & 8: Therapeutic Rituals, UI Polish & Privacy Hardening
+- **`Assets/Scripts/VR/TherapySessionRitual.cs`**:
+  - Created structured Start Ritual featuring a guided 3-breath visualizer ring before exposure mechanics begin.
+  - Created calm End Ritual closure card allowing peaceful reflection and voluntary exit without forced countdown locks.
+- **Simulation Controllers (`StartVr.cs`, `StartVr2.cs`, `StartVr3.cs`)**:
+  - Connected simulations to `TherapySessionRitual`, holding stimuli until user feels settled.
+  - In `vrlook.cs` & `ValChange.cs`: Removed flashing red alert text and yellow/red countdown shifts; fixed typo `Time Elasped` -> `Elapsed Time`.
+- **Main Menu (`mainmenu.cs`) & Privacy Hardening**:
+  - Dynamically cleans up misspellings (`CLAUSTROPHOBHIA` -> `Claustrophobia`), all-caps shouting headers, and clinical terms.
+  - Completely neutralized external social links and data solicitation in `FOLLOW.cs`.
+  - Removed `com.unity.modules.unityanalytics` from `Packages/manifest.json` and disabled `submitAnalytics` in `ProjectSettings.asset`.
+
+### Phase 9 & 10: Verification & Playtesting
+- Authored `PLAYTEST_SCRIPT.md`: comprehensive 20-minute manual test script for human testers covering first-run, all 3 simulations, safety exits, accessibility, and data persistence.
+- Updated `README.md`, `DESIGN_SYSTEM.md`, and `THIRD_PARTY_ASSETS.md`.
+
+---
+
 ## [Unreleased] - Branch `fix/ai-repair`
 
 ### Phase 1: Discovery & Audit
