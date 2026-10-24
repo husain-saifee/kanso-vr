@@ -31,22 +31,43 @@ namespace DePhobia.VR
 
             _canvas.renderMode = RenderMode.WorldSpace;
 
-            if (_canvas.worldCamera == null && Camera.main != null)
+            Camera cam = Camera.main;
+            if (cam != null)
             {
-                _canvas.worldCamera = Camera.main;
+                _canvas.worldCamera = cam;
             }
 
             transform.localScale = Vector3.one * worldScale;
 
-            // Position comfortably 2.4m in front of player at eye level
-            Vector3 targetPos = new Vector3(0, eyeHeight, spawnDistance);
-            transform.position = targetPos;
-            transform.rotation = Quaternion.identity;
+            RecenterToPlayer();
 
             // Ensure GraphicRaycaster exists for pointer interaction
             if (GetComponent<GraphicRaycaster>() == null)
             {
                 gameObject.AddComponent<GraphicRaycaster>();
+            }
+        }
+
+        public void RecenterToPlayer()
+        {
+            Camera cam = Camera.main != null ? Camera.main : (_canvas != null ? _canvas.worldCamera : null);
+            if (cam != null)
+            {
+                Vector3 forward = cam.transform.forward;
+                forward.y = 0;
+                if (forward.sqrMagnitude < 0.01f) forward = cam.transform.forward;
+                forward.Normalize();
+
+                Vector3 targetPos = cam.transform.position + (forward * spawnDistance);
+                targetPos.y = cam.transform.position.y; // Eye level
+
+                transform.position = targetPos;
+                transform.rotation = Quaternion.LookRotation(forward);
+            }
+            else
+            {
+                transform.position = new Vector3(0, eyeHeight, spawnDistance);
+                transform.rotation = Quaternion.identity;
             }
         }
     }

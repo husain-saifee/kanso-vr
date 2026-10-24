@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.XR;
 using DePhobia.Core;
 
 namespace DePhobia.VR
@@ -6,7 +7,8 @@ namespace DePhobia.VR
     /// <summary>
     /// Unified modern OpenXR Player Rig for DePhobia.
     /// Provides dual-input locomotion (VR controllers + desktop WASD fallback),
-    /// snap/smooth turning, comfort vignette, and gaze pitch tracking.
+    /// snap/smooth turning, comfort vignette, seated mode recalibration,
+    /// haptic feedback, and gaze pitch tracking.
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
     public class VRPlayerRig : MonoBehaviour
@@ -16,7 +18,9 @@ namespace DePhobia.VR
         public float playerEyeHeight = 1.65f;
 
         [Header("Locomotion")]
-        public float moveSpeed = 2.2f;
+        public bool enableLocomotion = true;
+        public bool enableGravity = true;
+        public float moveSpeed = 2.0f;
         public float gravity = -9.81f;
         public bool allowGazeWalkFallback = false;
         public float gazeWalkMinPitch = 30f;
@@ -35,6 +39,7 @@ namespace DePhobia.VR
         private Vector3 _velocity;
         private bool _snapTurnCooldown = false;
         private float _snapCooldownTimer = 0f;
+        private bool _recenterPressedLastFrame = false;
 
         private void Awake()
         {
@@ -70,7 +75,23 @@ namespace DePhobia.VR
             LoadComfortPreferences();
         }
 
-        private void LoadComfortPreferences()
+        private void OnEnable()
+        {
+            if (TherapySettingsManager.Instance != null)
+            {
+                TherapySettingsManager.Instance.OnSettingsChanged += LoadComfortPreferences;
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (TherapySettingsManager.Instance != null)
+            {
+                TherapySettingsManager.Instance.OnSettingsChanged -= LoadComfortPreferences;
+            }
+        }
+
+        public void LoadComfortPreferences()
         {
             var sm = TherapySettingsManager.Instance;
             if (sm != null)
@@ -81,17 +102,47 @@ namespace DePhobia.VR
                 {
                     comfortVignette.enabled = sm.comfortVignetteEnabled;
                 }
+                ApplySeatedHeightOffset();
             }
         }
 
         private void Update()
         {
+            CheckGlobalShortcuts();
+
             if (pauseMenu != null && pauseMenu.isPaused)
                 return;
 
             HandleTurning();
-            HandleMovement();
-            HandleGravity();
+            if (enableLocomotion)
+            {
+                HandleMovement();
+            }
+            if (enableGravity)
+            {
+                HandleGravity();
+            }
+        }
+
+        private void CheckGlobalShortcuts()
+        {
+            // Check controller recenter shortcut (e.g. thumbstick click or R key)
+            bool recenterRequested = Input.GetKeyDown(KeyCode.R);
+            var rightHand = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
+            if (rightHand.isValid && rightHand.TryGetFeatureValue(CommonUsages.primary2DAxisClick, out bool thumbClick))
+            {
+                if (thumbClick && !_recenterPressedLastFrame)
+                {
+                    recenterRequested = true;
+                }
+                _recenterPressedLastFrame = thumbClick;
+            }
+
+            if (recenterRequested)
+            {
+                RecenterView();
+                SendHapticImpulse(0.3f, 0.1f, XRNode.RightHand);
+            }
         }
 
         private void HandleTurning()
@@ -119,6 +170,7 @@ namespace DePhobia.VR
                     transform.Rotate(0, angle, 0);
                     _snapTurnCooldown = true;
                     _snapCooldownTimer = 0.35f; // prevent rapid continuous snapping
+                    SendHapticImpulse(0.15f, 0.04f, XRNode.RightHand);
                 }
             }
             else
@@ -175,7 +227,7 @@ namespace DePhobia.VR
 
             // Execute movement via CharacterController
             bool isMoving = moveDirection.sqrMagnitude > 0.01f;
-            if (isMoving)
+            if (isMoving && _characterController != null && _characterController.enabled)
             {
                 _characterController.Move(moveDirection * (moveSpeed * Time.deltaTime));
             }
@@ -189,6 +241,8 @@ namespace DePhobia.VR
 
         private void HandleGravity()
         {
+            if (_characterController == null || !_characterController.enabled) return;
+
             if (_characterController.isGrounded && _velocity.y < 0)
             {
                 _velocity.y = -2f;
@@ -198,6 +252,61 @@ namespace DePhobia.VR
                 _velocity.y += gravity * Time.deltaTime;
             }
             _characterController.Move(_velocity * Time.deltaTime);
+        }
+
+        /// <summary>
+        /// Sends gentle, informational haptic impulse to the specified VR controller.
+        /// </summary>
+        public void SendHapticImpulse(float amplitude = 0.2f, float duration = 0.06f, XRNode node = XRNode.RightHand)
+        {
+            var device = InputDevices.GetDeviceAtXRNode(node);
+            if (device.isValid && device.TryGetHapticCapabilities(out HapticCapabilities caps) && caps.supportsImpulse)
+            {
+                device.SendHapticImpulse(0u, Mathf.Clamp01(amplitude), duration);
+            }
+        }
+
+        /// <summary>
+        /// Recalibrates head position and yaw to face forward comfortably at eye level.
+        /// Fully supports seated and standing transitions.
+        /// </summary>
+        public void RecenterView()
+        {
+            if (headCamera != null)
+            {
+                // Reset yaw rotation
+                Vector3 headEuler = headCamera.eulerAngles;
+                transform.rotation = Quaternion.Euler(0, headEuler.y, 0) * transform.rotation;
+
+                // Adjust seated height
+                ApplySeatedHeightOffset();
+            }
+
+            // Also recenter active UI canvases
+            var canvasHelpers = FindObjectsOfType<VRWorldSpaceCanvasHelper>();
+            foreach (var helper in canvasHelpers)
+            {
+                helper.RecenterToPlayer();
+            }
+
+            Debug.Log("[VRPlayerRig] View and height successfully recentered.");
+        }
+
+        private void ApplySeatedHeightOffset()
+        {
+            var sm = TherapySettingsManager.Instance;
+            if (sm != null && headCamera != null && _characterController != null)
+            {
+                float targetEye = sm.seatedMode ? (playerEyeHeight - sm.seatedHeightOffset) : playerEyeHeight;
+                float currentEye = headCamera.localPosition.y;
+                float deltaY = targetEye - currentEye;
+
+                if (Mathf.Abs(deltaY) > 0.05f)
+                {
+                    _characterController.stepOffset = 0.3f;
+                    transform.position += new Vector3(0, deltaY, 0);
+                }
+            }
         }
 
         /// <summary>
@@ -226,11 +335,7 @@ namespace DePhobia.VR
         /// </summary>
         public void RecenterHeight()
         {
-            if (headCamera != null && _characterController != null)
-            {
-                float deltaY = playerEyeHeight - headCamera.localPosition.y;
-                transform.position += new Vector3(0, deltaY, 0);
-            }
+            RecenterView();
         }
     }
 }

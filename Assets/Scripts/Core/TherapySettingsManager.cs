@@ -58,8 +58,26 @@ namespace DePhobia.Core
         public bool comfortVignetteEnabled = true;
         [Tooltip("Enable seated mode with auto camera height offset")]
         public bool seatedMode = false;
+        [Tooltip("Seated eye height offset in meters")]
+        public float seatedHeightOffset = 0.35f;
+
+        [Header("Audio & Accessibility")]
         [Tooltip("Master audio volume [0..1]")]
-        public float masterVolume = 1.0f;
+        public float masterVolume = 0.9f;
+        [Tooltip("Ambience bus volume [0..1]")]
+        public float ambienceVolume = 0.75f;
+        [Tooltip("UI & Feedback tone volume [0..1]")]
+        public float feedbackVolume = 0.65f;
+        [Tooltip("Voice & Guidance volume [0..1]")]
+        public float voiceVolume = 1.0f;
+        [Tooltip("Display subtitles for speech and important environmental sounds")]
+        public bool subtitlesEnabled = true;
+        [Tooltip("Softens non-essential animations")]
+        public bool reducedMotion = false;
+        [Tooltip("Enhanced contrast for UI panels and text")]
+        public bool highContrast = false;
+
+        public event Action OnSettingsChanged;
 
         // Legacy compatibility static accessors
         public static float ClausSpeed => Instance.clausSpeed;
@@ -174,9 +192,21 @@ namespace DePhobia.Core
             SaveSettings();
         }
 
+        public void SetSnapTurnAngle(float angle)
+        {
+            snapTurnAngle = Mathf.Clamp(angle, 15f, 90f);
+            SaveSettings();
+        }
+
         public void SetComfortVignette(bool enabled)
         {
             comfortVignetteEnabled = enabled;
+            SaveSettings();
+        }
+
+        public void SetSeatedMode(bool isSeated)
+        {
+            seatedMode = isSeated;
             SaveSettings();
         }
 
@@ -184,6 +214,112 @@ namespace DePhobia.Core
         {
             masterVolume = Mathf.Clamp01(volume);
             AudioListener.volume = masterVolume;
+            SaveSettings();
+        }
+
+        public void SetAmbienceVolume(float volume)
+        {
+            ambienceVolume = Mathf.Clamp01(volume);
+            SaveSettings();
+        }
+
+        public void SetFeedbackVolume(float volume)
+        {
+            feedbackVolume = Mathf.Clamp01(volume);
+            SaveSettings();
+        }
+
+        public void SetVoiceVolume(float volume)
+        {
+            voiceVolume = Mathf.Clamp01(volume);
+            SaveSettings();
+        }
+
+        public void SetSubtitlesEnabled(bool enabled)
+        {
+            subtitlesEnabled = enabled;
+            SaveSettings();
+        }
+
+        public void SetReducedMotion(bool enabled)
+        {
+            reducedMotion = enabled;
+            SaveSettings();
+        }
+
+        public void SetHighContrast(bool enabled)
+        {
+            highContrast = enabled;
+            SaveSettings();
+        }
+
+        public void ApplyPreset(string phobia, string presetName)
+        {
+            switch (phobia.ToLowerInvariant())
+            {
+                case "claus":
+                case "claustrophobia":
+                    if (presetName == "Gentle")
+                    {
+                        clausSpeed = 0.025f;
+                        clausMoveAfter = 6.0f;
+                        clausMoveDuration = 1.5f;
+                    }
+                    else if (presetName == "Intense")
+                    {
+                        clausSpeed = 0.08f;
+                        clausMoveAfter = 2.0f;
+                        clausMoveDuration = 3.0f;
+                    }
+                    else // Standard
+                    {
+                        clausSpeed = 0.05f;
+                        clausMoveAfter = 3.5f;
+                        clausMoveDuration = 2.0f;
+                    }
+                    break;
+
+                case "aqua":
+                case "aquaphobia":
+                    if (presetName == "Gentle")
+                    {
+                        aquaWaterSpeed = 0.03f;
+                        aquaRiseAfter = 5.0f;
+                        aquaRiseDuration = 1.5f;
+                    }
+                    else if (presetName == "Intense")
+                    {
+                        aquaWaterSpeed = 0.09f;
+                        aquaRiseAfter = 1.5f;
+                        aquaRiseDuration = 3.0f;
+                    }
+                    else // Standard
+                    {
+                        aquaWaterSpeed = 0.06f;
+                        aquaRiseAfter = 2.5f;
+                        aquaRiseDuration = 2.0f;
+                    }
+                    break;
+
+                case "acro":
+                case "acrophobia":
+                    if (presetName == "Gentle")
+                    {
+                        acroWaitTime = 7.0f;
+                        acroStillFocusTime = 0.9f;
+                    }
+                    else if (presetName == "Intense")
+                    {
+                        acroWaitTime = 2.5f;
+                        acroStillFocusTime = 0.4f;
+                    }
+                    else // Standard
+                    {
+                        acroWaitTime = 4.5f;
+                        acroStillFocusTime = 0.6f;
+                    }
+                    break;
+            }
             SaveSettings();
         }
 
@@ -209,22 +345,32 @@ namespace DePhobia.Core
             PlayerPrefs.SetFloat("SnapTurnAngle", snapTurnAngle);
             PlayerPrefs.SetInt("ComfortVignette", comfortVignetteEnabled ? 1 : 0);
             PlayerPrefs.SetInt("SeatedMode", seatedMode ? 1 : 0);
+            PlayerPrefs.SetFloat("SeatedHeightOffset", seatedHeightOffset);
+
             PlayerPrefs.SetFloat("MasterVolume", masterVolume);
+            PlayerPrefs.SetFloat("AmbienceVolume", ambienceVolume);
+            PlayerPrefs.SetFloat("FeedbackVolume", feedbackVolume);
+            PlayerPrefs.SetFloat("VoiceVolume", voiceVolume);
+
+            PlayerPrefs.SetInt("SubtitlesEnabled", subtitlesEnabled ? 1 : 0);
+            PlayerPrefs.SetInt("ReducedMotion", reducedMotion ? 1 : 0);
+            PlayerPrefs.SetInt("HighContrast", highContrast ? 1 : 0);
 
             PlayerPrefs.Save();
+            OnSettingsChanged?.Invoke();
         }
 
         public void LoadSettings()
         {
             clausSpeed = PlayerPrefs.GetFloat("ClausSpeed", 0.05f);
-            clausMoveAfter = PlayerPrefs.GetFloat("ClausMoveAfter", 3.0f);
+            clausMoveAfter = PlayerPrefs.GetFloat("ClausMoveAfter", 3.5f);
             clausMoveDuration = PlayerPrefs.GetFloat("ClausMoveDuration", 2.0f);
 
             aquaWaterSpeed = PlayerPrefs.GetFloat("AquaWaterSpeed", 0.06f);
-            aquaRiseAfter = PlayerPrefs.GetFloat("AquaRiseAfter", 2.0f);
+            aquaRiseAfter = PlayerPrefs.GetFloat("AquaRiseAfter", 2.5f);
             aquaRiseDuration = PlayerPrefs.GetFloat("AquaRiseDuration", 2.0f);
 
-            acroWaitTime = PlayerPrefs.GetFloat("AcroWaitTime", 4.0f);
+            acroWaitTime = PlayerPrefs.GetFloat("AcroWaitTime", 4.5f);
             acroStillFocusTime = PlayerPrefs.GetFloat("AcroStillFocusTime", 0.6f);
             acroSoundEnabled = PlayerPrefs.GetInt("AcroSoundEnabled", 1) == 1;
 
@@ -232,9 +378,19 @@ namespace DePhobia.Core
             snapTurnAngle = PlayerPrefs.GetFloat("SnapTurnAngle", 45f);
             comfortVignetteEnabled = PlayerPrefs.GetInt("ComfortVignette", 1) == 1;
             seatedMode = PlayerPrefs.GetInt("SeatedMode", 0) == 1;
-            masterVolume = PlayerPrefs.GetFloat("MasterVolume", 1.0f);
+            seatedHeightOffset = PlayerPrefs.GetFloat("SeatedHeightOffset", 0.35f);
+
+            masterVolume = PlayerPrefs.GetFloat("MasterVolume", 0.9f);
+            ambienceVolume = PlayerPrefs.GetFloat("AmbienceVolume", 0.75f);
+            feedbackVolume = PlayerPrefs.GetFloat("FeedbackVolume", 0.65f);
+            voiceVolume = PlayerPrefs.GetFloat("VoiceVolume", 1.0f);
+
+            subtitlesEnabled = PlayerPrefs.GetInt("SubtitlesEnabled", 1) == 1;
+            reducedMotion = PlayerPrefs.GetInt("ReducedMotion", 0) == 1;
+            highContrast = PlayerPrefs.GetInt("HighContrast", 0) == 1;
 
             AudioListener.volume = masterVolume;
+            OnSettingsChanged?.Invoke();
         }
 
         #endregion
