@@ -185,6 +185,7 @@ namespace DePhobia.VR
 
             var canvas = canvasObj.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.WorldSpace;
+            canvas.worldCamera = vrCamera != null ? vrCamera.GetComponent<Camera>() : Camera.main;
             canvas.sortingOrder = 500;
 
             var scaler = canvasObj.AddComponent<CanvasScaler>();
@@ -282,6 +283,7 @@ namespace DePhobia.VR
             text.fontSize = 15;
             text.alignment = TextAlignmentOptions.Center;
             text.color = new Color(0.957f, 0.953f, 0.973f, 1f);
+            text.raycastTarget = false;
 
             var textRect = textObj.GetComponent<RectTransform>();
             textRect.anchorMin = Vector2.zero;

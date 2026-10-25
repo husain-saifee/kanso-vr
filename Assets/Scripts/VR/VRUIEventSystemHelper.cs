@@ -7,8 +7,9 @@ using UnityEngine.InputSystem.UI;
 namespace DePhobia.VR
 {
     /// <summary>
-    /// Automatically upgrades EventSystem to InputSystemUIInputModule when the New Input System
-    /// is active, ensuring mouse clicks, touch, and UI interactions always work smoothly across all scenes.
+    /// Automatically upgrades EventSystem across all scenes to InputSystemUIInputModule,
+    /// removing any conflicting legacy GoogleVR or Standalone input modules so that mouse clicks,
+    /// touch, and pointer interactions always work without fail.
     /// </summary>
     [DefaultExecutionOrder(-1000)]
     public class VRUIEventSystemHelper : MonoBehaviour
@@ -41,6 +42,21 @@ namespace DePhobia.VR
             EnsureEventSystemModule();
         }
 
+        private void Update()
+        {
+            // Continuously verify that no legacy input module (e.g. GvrPointerInputModule) has taken over
+            var es = EventSystem.current != null ? EventSystem.current : FindObjectOfType<EventSystem>();
+            if (es != null)
+            {
+#if ENABLE_INPUT_SYSTEM
+                if (es.GetComponent<InputSystemUIInputModule>() == null)
+                {
+                    EnsureEventSystemModule();
+                }
+#endif
+            }
+        }
+
         public static void EnsureEventSystemModule()
         {
             var es = FindObjectOfType<EventSystem>();
@@ -50,17 +66,35 @@ namespace DePhobia.VR
                 es = esGo.AddComponent<EventSystem>();
             }
 
-#if ENABLE_INPUT_SYSTEM
-            var standalone = es.GetComponent<StandaloneInputModule>();
-            var inputSystemModule = es.GetComponent<InputSystemUIInputModule>();
-
-            if (inputSystemModule == null)
+            // Clean up any legacy or dummy input modules (such as GvrPointerInputModule or StandaloneInputModule)
+            var modules = es.GetComponents<BaseInputModule>();
+            foreach (var mod in modules)
             {
-                if (standalone != null)
+                if (mod != null)
                 {
-                    Destroy(standalone);
+#if ENABLE_INPUT_SYSTEM
+                    if (!(mod is InputSystemUIInputModule))
+                    {
+                        DestroyImmediate(mod);
+                    }
+#else
+                    if (!(mod is StandaloneInputModule))
+                    {
+                        DestroyImmediate(mod);
+                    }
+#endif
                 }
+            }
+
+#if ENABLE_INPUT_SYSTEM
+            if (es.GetComponent<InputSystemUIInputModule>() == null)
+            {
                 es.gameObject.AddComponent<InputSystemUIInputModule>();
+            }
+#else
+            if (es.GetComponent<StandaloneInputModule>() == null)
+            {
+                es.gameObject.AddComponent<StandaloneInputModule>();
             }
 #endif
         }
