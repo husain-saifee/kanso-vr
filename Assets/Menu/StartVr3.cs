@@ -27,14 +27,11 @@ public class StartVr3 : MonoBehaviour
             if (camCol != null) Destroy(camCol);
         }
 
-        // Reposition hoverboard from empty void (-201, -180) to central city avenue (0, 28, 0)
+        // Reposition hoverboard deep into the city center avenue (228, 32, 145) surrounded by 350m skyscrapers
         if (_lookScript != null)
         {
-            if (_lookScript.transform.position.x < -50f || _lookScript.transform.position.z < -50f)
-            {
-                _lookScript.transform.position = new Vector3(0f, 28f, 0f);
-                _lookScript.transform.rotation = Quaternion.Euler(0f, 45f, 0f);
-            }
+            _lookScript.transform.position = new Vector3(228f, 32f, 145f);
+            _lookScript.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
 
             var hoverRb = _lookScript.GetComponent<Rigidbody>();
             if (hoverRb != null)
