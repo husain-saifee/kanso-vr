@@ -150,6 +150,9 @@ namespace DePhobia.VR
             // Input from right VR thumbstick or keyboard Q/E / Horizontal arrows
             float turnInput = 0f;
 
+            // Desktop mouse horizontal turn
+            if (Input.GetMouseButton(1)) { float mouseX = Input.GetAxis("Mouse X"); if (Mathf.Abs(mouseX) > 0.02f) transform.Rotate(0, mouseX * 3.5f, 0); }
+
             if (Input.GetKey(KeyCode.E)) turnInput = 1f;
             else if (Input.GetKey(KeyCode.Q)) turnInput = -1f;
             else turnInput = Input.GetAxis("Horizontal"); // Right stick or A/D
@@ -250,8 +253,12 @@ namespace DePhobia.VR
             else
             {
                 _velocity.y += gravity * Time.deltaTime;
+                _velocity.y = Mathf.Max(_velocity.y, -12f);
             }
             _characterController.Move(_velocity * Time.deltaTime);
+
+            // Floor safety clamp
+            if (transform.position.y < 0.2f) { _velocity.y = 0f; Vector3 sp = transform.position; sp.y = 1.0f; transform.position = sp; }
         }
 
         /// <summary>

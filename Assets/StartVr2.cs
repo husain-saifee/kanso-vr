@@ -20,11 +20,31 @@ public class StartVr2 : MonoBehaviour
         _waterScript = FindObjectOfType<MoreHeight1>();
         if (_waterScript != null) _waterScript.enabled = false;
 
-        // Disable legacy VRLookWalk if present to prevent duplicate CharacterControllers
+        // Disable legacy VRLookWalk and any duplicate CharacterControllers on this GameObject to prevent physics collisions and falling into void
         var lookWalk = FindObjectOfType<VRLookWalk>();
         if (lookWalk != null)
         {
             lookWalk.enabled = false;
+        }
+
+        var oldCc = GetComponent<CharacterController>();
+        if (oldCc != null)
+        {
+            oldCc.enabled = false;
+        }
+
+        var oldRb = GetComponent<Rigidbody>();
+        if (oldRb != null)
+        {
+            oldRb.isKinematic = true;
+            oldRb.useGravity = false;
+        }
+
+        // Raycast down to find the safe island sand elevation so player never spawns in mid-air or void
+        Vector3 spawnPos = new Vector3(-6f, 1.2f, 8f);
+        if (Physics.Raycast(new Vector3(-6f, 25f, 8f), Vector3.down, out RaycastHit groundHit, 50f))
+        {
+            spawnPos = groundHit.point + Vector3.up * 0.15f;
         }
 
         // Ensure VR Rig exists at the player's island spawn
@@ -32,7 +52,7 @@ public class StartVr2 : MonoBehaviour
         if (rig == null)
         {
             var rigGo = new GameObject("VRPlayerRig");
-            rigGo.transform.position = transform.position;
+            rigGo.transform.position = spawnPos;
             rigGo.transform.rotation = transform.rotation;
 
             rig = rigGo.AddComponent<VRPlayerRig>();
@@ -40,8 +60,13 @@ public class StartVr2 : MonoBehaviour
             if (cam != null)
             {
                 cam.transform.SetParent(rigGo.transform, false);
+                cam.transform.localPosition = new Vector3(0, 1.6f, 0);
                 rig.headCamera = cam.transform;
             }
+        }
+        else
+        {
+            rig.transform.position = spawnPos;
         }
 
         // Ensure in-world emergency exit beacon exists
@@ -65,7 +90,7 @@ public class StartVr2 : MonoBehaviour
     {
         if (_waterActive && !_completionShown && _waterScript != null)
         {
-            // Safe height boundary clamped around 1.75m
+            // Safe height boundary clamped around 1.72m
             if (_waterScript.transform.position.y >= 1.72f)
             {
                 _completionShown = true;

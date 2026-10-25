@@ -60,6 +60,18 @@ namespace DePhobia.VR
         {
             if (!_isRitualActive) return;
 
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+
+            if (_ritualCanvas != null)
+            {
+                var canvas = _ritualCanvas.GetComponent<Canvas>();
+                if (canvas != null && canvas.worldCamera == null)
+                {
+                    canvas.worldCamera = Camera.main != null ? Camera.main : FindObjectOfType<Camera>();
+                }
+            }
+
             // Global Keyboard / Controller shortcuts for immediate accessibility
             if (!_isEndRitual)
             {

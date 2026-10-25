@@ -137,21 +137,36 @@ namespace DePhobia.VR
             var beacon = beaconObj.AddComponent<VREmergencyExitBeacon>();
 
             // Visual background card (Direction C styling)
-            var cardGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            cardGo.name = "BeaconPlate";
+            // Constructed with a clean procedural Quad Mesh to avoid triggering Unity 5+ non-convex MeshCollider errors on rigidbodies
+            var cardGo = new GameObject("BeaconPlate");
             cardGo.transform.SetParent(beaconObj.transform, false);
             cardGo.transform.localScale = new Vector3(0.85f, 0.45f, 1f);
 
-            var quadCollider = cardGo.GetComponent<Collider>();
-            if (quadCollider != null) Destroy(quadCollider);
-
-            var renderer = cardGo.GetComponent<MeshRenderer>();
-            if (renderer != null)
+            var mf = cardGo.AddComponent<MeshFilter>();
+            var quadMesh = new Mesh();
+            quadMesh.name = "BeaconPlateMesh";
+            quadMesh.vertices = new Vector3[]
             {
-                var mat = new Material(Shader.Find("Standard") ?? Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Diffuse"));
-                mat.color = new Color(0.141f, 0.137f, 0.220f, 0.95f); // SurfacePanel #242338
-                renderer.material = mat;
-            }
+                new Vector3(-0.5f, -0.5f, 0),
+                new Vector3(0.5f, -0.5f, 0),
+                new Vector3(-0.5f, 0.5f, 0),
+                new Vector3(0.5f, 0.5f, 0)
+            };
+            quadMesh.uv = new Vector2[]
+            {
+                new Vector2(0, 0),
+                new Vector2(1, 0),
+                new Vector2(0, 1),
+                new Vector2(1, 1)
+            };
+            quadMesh.triangles = new int[] { 0, 2, 1, 2, 3, 1 };
+            quadMesh.RecalculateNormals();
+            mf.sharedMesh = quadMesh;
+
+            var renderer = cardGo.AddComponent<MeshRenderer>();
+            var mat = new Material(Shader.Find("Standard") ?? Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Diffuse") ?? Shader.Find("Unlit/Color"));
+            mat.color = new Color(0.141f, 0.137f, 0.220f, 0.95f); // SurfacePanel #242338
+            renderer.material = mat;
 
             // Text Labels
             var labelObj = new GameObject("StatusLabel");
