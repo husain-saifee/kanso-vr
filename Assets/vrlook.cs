@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using DePhobia.Core;
+using DePhobia.VR;
 
 /// <summary>
 /// Core Acrophobia exposure therapy mechanic.
