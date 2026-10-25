@@ -55,7 +55,7 @@ namespace DePhobia.Core
         [Tooltip("Angle per snap turn increment in degrees")]
         public float snapTurnAngle = 45f;
         [Tooltip("Enable peripheral vignette tunneling during movement")]
-        public bool comfortVignetteEnabled = true;
+        public bool comfortVignetteEnabled = false;
         [Tooltip("Enable seated mode with auto camera height offset")]
         public bool seatedMode = false;
         [Tooltip("Seated eye height offset in meters")]
@@ -376,7 +376,7 @@ namespace DePhobia.Core
 
             snapTurn = PlayerPrefs.GetInt("SnapTurn", 1) == 1;
             snapTurnAngle = PlayerPrefs.GetFloat("SnapTurnAngle", 45f);
-            comfortVignetteEnabled = PlayerPrefs.GetInt("ComfortVignette", 1) == 1;
+            comfortVignetteEnabled = PlayerPrefs.GetInt("ComfortVignette", 0) == 1;
             seatedMode = PlayerPrefs.GetInt("SeatedMode", 0) == 1;
             seatedHeightOffset = PlayerPrefs.GetFloat("SeatedHeightOffset", 0.35f);
 

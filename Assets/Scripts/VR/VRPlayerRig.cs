@@ -39,7 +39,8 @@ namespace DePhobia.VR
         private Vector3 _velocity;
         private bool _snapTurnCooldown = false;
         private float _snapCooldownTimer = 0f;
-        private bool _recenterPressedLastFrame = false;
+        private bool _recenterPressedLastFrame = false;
+
         private float _desktopPitch = 0f;
 
         private void Awake()
@@ -52,16 +53,7 @@ namespace DePhobia.VR
                 if (cam != null) headCamera = cam.transform;
             }
 
-            if (comfortVignette == null)
-            {
-                comfortVignette = GetComponentInChildren<VRComfortVignette>();
-                if (comfortVignette == null)
-                {
-                    var vigObj = new GameObject("VRComfortVignette");
-                    vigObj.transform.SetParent(transform, false);
-                    comfortVignette = vigObj.AddComponent<VRComfortVignette>();
-                }
-            }
+
 
             if (pauseMenu == null)
             {
@@ -247,11 +239,7 @@ namespace DePhobia.VR
                 _characterController.Move(moveDirection * (moveSpeed * Time.deltaTime));
             }
 
-            // Trigger Comfort Vignette when moving
-            if (comfortVignette != null)
-            {
-                comfortVignette.SetMotionActive(isMoving);
-            }
+
         }
 
         private void HandleGravity()
