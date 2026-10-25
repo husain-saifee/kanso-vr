@@ -39,7 +39,7 @@ public class StartVr : MonoBehaviour
                 wall.vtime = moveDuration;
                 wall.enabled = false;
                 var rb = wall.GetComponent<Rigidbody>();
-                if (rb != null) rb.velocity = Vector3.zero;
+                if (rb != null && !rb.isKinematic) rb.velocity = Vector3.zero;
             }
         }
 
@@ -52,7 +52,7 @@ public class StartVr : MonoBehaviour
                 wall.vtime = moveDuration;
                 wall.enabled = false;
                 var rb = wall.GetComponent<Rigidbody>();
-                if (rb != null) rb.velocity = Vector3.zero;
+                if (rb != null && !rb.isKinematic) rb.velocity = Vector3.zero;
             }
         }
 

@@ -7,7 +7,9 @@ using DePhobia.VR;
 /// <summary>
 /// Core Acrophobia exposure therapy mechanic.
 /// Looking downward at the city ascends the hoverboard, rewarding the patient for confronting the height.
-/// Looking away for longer than wait time causes the hoverboard to descend until the patient refocuses.
+/// Looking away for longer than wait time causes the hoverboard to gently descend until the patient refocuses.
+/// Supports both OpenXR head tracking and desktop mouse/keyboard look (Right-click drag, mouse move, Up/Down arrows).
+/// Employs controlled kinematic positioning to guarantee no freefall drops, zero physics jitter, and no velocity warnings.
 /// </summary>
 public class vrlook : MonoBehaviour
 {
@@ -53,7 +55,12 @@ public class vrlook : MonoBehaviour
     public float focusTimenotfalling = 0.6f;
     public float focusTimefalling = 0.6f;
 
-    private const float MIN_HOVERBOARD_Y = 27.04f;
+    private const float MIN_HOVERBOARD_Y = 28.0f;
+    private const float MAX_HOVERBOARD_Y = 360.0f;
+
+    // Desktop pitch/yaw tracking
+    private float _cameraPitch = 0f;
+    private float _hoverYaw = 45f;
 
     void Start()
     {
@@ -66,8 +73,19 @@ public class vrlook : MonoBehaviour
 
         TTimeg1 = focusTimenotfalling;
         rd = GetComponent<Rigidbody>();
+        if (rd != null)
+        {
+            rd.useGravity = false;
+            rd.isKinematic = true;
+            rd.constraints = RigidbodyConstraints.FreezeAll;
+        }
+
         cc = GetComponent<CharacterController>();
+        if (cc != null) cc.enabled = false;
+
         Times = Time.time;
+        TimePtStartseeingdown = 0f;
+        TimePtleftseeingdown = 0f;
 
         if (Max != null)
         {
@@ -79,6 +97,16 @@ public class vrlook : MonoBehaviour
         {
             vrCamera = Camera.main.transform;
         }
+
+        // Initialize altitude at least to MIN_HOVERBOARD_Y over the city street
+        if (transform.position.y < MIN_HOVERBOARD_Y || transform.position.x < -50f)
+        {
+            transform.position = new Vector3(0f, MIN_HOVERBOARD_Y, 0f);
+            transform.rotation = Quaternion.Euler(0f, 45f, 0f);
+        }
+
+        ValChange.hf = transform.position.y;
+        ValChange.HighestHigh = Mathf.Max(ValChange.HighestHigh, transform.position.y);
     }
 
     void Update()
@@ -86,13 +114,15 @@ public class vrlook : MonoBehaviour
         TTimeg = Timeg;
         Tim = Time.time - Times;
 
+        HandleDesktopLook();
+
         bool soundEnabled = TherapySettingsManager.Instance == null || TherapySettingsManager.Instance.acroSoundEnabled;
         if (soundEnabled && rd != null)
         {
             PlayAmbientSounds();
         }
 
-        if (ValChange.HighestHigh <= 360 && endingstate == 0)
+        if (ValChange.HighestHigh <= MAX_HOVERBOARD_Y && endingstate == 0)
         {
             if (ValChange.hf <= 240 && ValChange.hf > 120 && d != 1)
             {
@@ -108,14 +138,7 @@ public class vrlook : MonoBehaviour
             Timer = Tim - TimePtleftseeingdown;
             Timer1 = Tim - TimePtStartseeingdown;
 
-            if (rd != null && rd.transform.position.y <= MIN_HOVERBOARD_Y)
-            {
-                rd.isKinematic = true;
-                rd.transform.position = new Vector3(rd.transform.position.x, MIN_HOVERBOARD_Y, rd.transform.position.z);
-                k = 1;
-            }
-
-            // Robust 6DoF pitch check
+            // Pitch check for gaze downward confrontation
             if (vrCamera != null)
             {
                 float pitch = vrCamera.eulerAngles.x;
@@ -127,57 +150,97 @@ public class vrlook : MonoBehaviour
                 SeeingDown = false;
             }
 
+            float currentY = transform.position.y;
+
             if (SeeingDown)
             {
-                if (rd != null && rd.isKinematic)
+                // Looking down at the city
+                TimePtleftseeingdown = Tim;
+
+                if (Timer1 >= focusTimenotfalling)
                 {
-                    Timer1 = Tim - TimePtStartseeingdown;
-                    if (Timer1 >= focusTimenotfalling)
-                    {
-                        rd.isKinematic = false;
-                        k = 0;
-                        rd.velocity = new Vector3(0, speed, 0);
-                        TimePtleftseeingdown = Tim;
-                    }
-                }
-                else if (rd != null && !rd.isKinematic)
-                {
-                    if (Tim - TimePtStartseeingdown >= focusTimefalling)
-                    {
-                        started = 1;
-                        rd.isKinematic = false;
-                        k = 0;
-                        rd.velocity = new Vector3(0, speed, 0);
-                        TimePtleftseeingdown = Tim;
-                    }
+                    started = 1;
+                    k = 0;
+                    // Ascend smoothly towards summit
+                    currentY += speed * Time.deltaTime;
                 }
             }
             else
             {
-                // Looking away from the abyss
-                if (rd != null)
-                {
-                    if (Timer >= Timeg && !(rd.transform.position.y <= MIN_HOVERBOARD_Y))
-                    {
-                        rd.isKinematic = false;
-                        k = 0;
-                    }
-                    else
-                    {
-                        rd.isKinematic = true;
-                        k = 1;
-                    }
-                }
+                // Looking away / resting
                 TimePtStartseeingdown = Tim;
+
+                if (Timer >= Timeg && currentY > MIN_HOVERBOARD_Y)
+                {
+                    k = 0;
+                    // Controlled gentle descent
+                    currentY -= 1.0f * Time.deltaTime;
+                }
+                else
+                {
+                    k = 1; // holding steady
+                }
             }
 
-            tlast = Tim;
+            // Clamping bounds
+            currentY = Mathf.Clamp(currentY, MIN_HOVERBOARD_Y, MAX_HOVERBOARD_Y);
+            transform.position = new Vector3(transform.position.x, currentY, transform.position.z);
+
+            ValChange.hf = currentY;
+            ValChange.HighestHigh = Mathf.Max(ValChange.HighestHigh, currentY);
             PatientSessionManager.Instance.UpdatePeakMetric(ValChange.HighestHigh);
+
+            tlast = Tim;
+
+            if (currentY >= MAX_HOVERBOARD_Y)
+            {
+                HandleEndingSequence();
+            }
         }
         else
         {
-            // Ceiling Reached (> 360m) - Ending Sequence
             HandleEndingSequence();
+        }
+    }
+
+    /// <summary>
+    /// Enables intuitive mouse and keyboard view controls on desktop:
+    /// - Right-click drag (or Left-click drag) to look around in 360 degrees
+    /// - Moving mouse up/down tilts head pitch; left/right turns yaw
+    /// - Up/Down Arrow keys (or W/S) tilt head up/down directly
+    /// </summary>
+    private void HandleDesktopLook()
+    {
+        // Keyboard tilt controls (Up/Down arrows or W/S)
+        float keyboardPitchDelta = 0f;
+        if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S)) keyboardPitchDelta += 45f * Time.deltaTime;
+        if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W)) keyboardPitchDelta -= 45f * Time.deltaTime;
+
+        float mouseX = 0f;
+        float mouseY = 0f;
+
+        // Mouse look when holding right-click, left-click drag, or cursor unlocked
+        if (Input.GetMouseButton(1) || Input.GetMouseButton(0))
+        {
+            mouseX = Input.GetAxis("Mouse X") * 3.0f;
+            mouseY = Input.GetAxis("Mouse Y") * 3.0f;
+        }
+
+        if (Mathf.Abs(mouseY) > 0.01f || Mathf.Abs(keyboardPitchDelta) > 0.01f)
+        {
+            _cameraPitch += (mouseY != 0f ? -mouseY : keyboardPitchDelta);
+            _cameraPitch = Mathf.Clamp(_cameraPitch, -85f, 85f);
+
+            if (vrCamera != null)
+            {
+                vrCamera.localEulerAngles = new Vector3(_cameraPitch, 0f, 0f);
+            }
+        }
+
+        if (Mathf.Abs(mouseX) > 0.01f)
+        {
+            _hoverYaw += mouseX;
+            transform.rotation = Quaternion.Euler(0f, _hoverYaw, 0f);
         }
     }
 
@@ -195,13 +258,10 @@ public class vrlook : MonoBehaviour
             };
             if (clip != null && rd != null)
             {
-                // Play softly at 0.35 volume
-                AudioSource.PlayClipAtPoint(clip, rd.transform.position, 0.35f);
+                AudioSource.PlayClipAtPoint(clip, transform.position, 0.35f);
             }
             lastplay = Tim;
         }
-
-        // Banned loud car horn honks (b1..b5) to protect emotional safety and prevent startle response.
     }
 
     private void HandleEndingSequence()
@@ -210,15 +270,14 @@ public class vrlook : MonoBehaviour
         endingstate = 1;
         e = 1;
 
-        if (rd != null)
+        if (rd != null && !rd.isKinematic)
         {
             rd.velocity = Vector3.zero;
-            rd.isKinematic = true;
         }
 
         if (Max != null)
         {
-            Max.SetActive(false); // Hide legacy flashing HUD
+            Max.SetActive(false);
         }
 
         TherapyAudioManager.TriggerCaption("Summit reached (360m). Take a moment to breathe.", 6.0f);

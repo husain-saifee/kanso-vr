@@ -20,7 +20,7 @@ public class xposmove : MonoBehaviour
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
-        if (rb != null)
+        if (rb != null && !rb.isKinematic)
         {
             rb.velocity = Vector3.zero;
         }
@@ -40,7 +40,7 @@ public class xposmove : MonoBehaviour
     {
         if (!sessionStarted)
         {
-            if (rb != null) rb.velocity = Vector3.zero;
+            if (rb != null && !rb.isKinematic) rb.velocity = Vector3.zero;
             tstart = Time.time;
             return;
         }
@@ -48,7 +48,7 @@ public class xposmove : MonoBehaviour
         // Safety clamp: do not move beyond safe threshold (-2.85m)
         if (transform.position.x >= -2.85f)
         {
-            if (rb != null) rb.velocity = Vector3.zero;
+            if (rb != null && !rb.isKinematic) rb.velocity = Vector3.zero;
             return;
         }
 
@@ -58,7 +58,14 @@ public class xposmove : MonoBehaviour
         {
             if (flag1 == 1 && (time - mstart) >= timerate)
             {
-                if (rb != null) rb.velocity = new Vector3(1, 0, 0) * speed;
+                if (rb != null && !rb.isKinematic)
+                {
+                    rb.velocity = new Vector3(1, 0, 0) * speed;
+                }
+                else
+                {
+                    transform.position += new Vector3(1, 0, 0) * speed * Time.deltaTime;
+                }
                 vstart = time;
                 flag = 1;
                 flag1 = 0;
@@ -66,7 +73,7 @@ public class xposmove : MonoBehaviour
 
             if (flag == 1 && (time - vstart >= vtime))
             {
-                if (rb != null) rb.velocity = Vector3.zero;
+                if (rb != null && !rb.isKinematic) rb.velocity = Vector3.zero;
                 flag = 0;
                 mstart = time;
                 flag1 = 1;
@@ -74,7 +81,7 @@ public class xposmove : MonoBehaviour
         }
         else
         {
-            if (rb != null) rb.velocity = Vector3.zero;
+            if (rb != null && !rb.isKinematic) rb.velocity = Vector3.zero;
         }
     }
 }

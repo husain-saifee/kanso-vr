@@ -39,7 +39,8 @@ namespace DePhobia.VR
         private Vector3 _velocity;
         private bool _snapTurnCooldown = false;
         private float _snapCooldownTimer = 0f;
-        private bool _recenterPressedLastFrame = false;
+        private bool _recenterPressedLastFrame = false;
+        private float _desktopPitch = 0f;
 
         private void Awake()
         {
@@ -151,7 +152,18 @@ namespace DePhobia.VR
             float turnInput = 0f;
 
             // Desktop mouse horizontal turn
-            if (Input.GetMouseButton(1)) { float mouseX = Input.GetAxis("Mouse X"); if (Mathf.Abs(mouseX) > 0.02f) transform.Rotate(0, mouseX * 3.5f, 0); }
+            if (Input.GetMouseButton(1) || Input.GetMouseButton(0))
+            {
+                float mouseX = Input.GetAxis("Mouse X");
+                float mouseY = Input.GetAxis("Mouse Y");
+                if (Mathf.Abs(mouseX) > 0.01f) transform.Rotate(0, mouseX * 3.0f, 0);
+                if (headCamera != null && Mathf.Abs(mouseY) > 0.01f)
+                {
+                    _desktopPitch -= mouseY * 3.0f;
+                    _desktopPitch = Mathf.Clamp(_desktopPitch, -85f, 85f);
+                    headCamera.localEulerAngles = new Vector3(_desktopPitch, 0f, 0f);
+                }
+            }
 
             if (Input.GetKey(KeyCode.E)) turnInput = 1f;
             else if (Input.GetKey(KeyCode.Q)) turnInput = -1f;

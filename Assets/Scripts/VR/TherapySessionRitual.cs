@@ -10,7 +10,8 @@ namespace DePhobia.VR
     /// <summary>
     /// Implements gentle Start and End rituals for exposure therapy sessions.
     /// Fosters containment, emotional safety, predictable transitions, and deliberate breathing.
-    /// Supports both mouse clicks and keyboard/controller shortcuts (Space/Enter to begin, Esc to exit).
+    /// Supports direct mouse clicks (ScreenSpaceOverlay on Desktop), keyboard shortcuts (Space/Enter to begin, Esc to exit),
+    /// and VR controller point-and-click.
     /// </summary>
     public class TherapySessionRitual : MonoBehaviour
     {
@@ -21,6 +22,11 @@ namespace DePhobia.VR
         private Image _breathingRing;
         private bool _isRitualActive = false;
         private bool _isEndRitual = false;
+
+        private RectTransform _beginBtnRect;
+        private RectTransform _exitBtnRect;
+        private RectTransform _endReturnBtnRect;
+        private RectTransform _endStayBtnRect;
 
         public static TherapySessionRitual ShowStartRitual(string phobiaName, Action onReadyToBegin)
         {
@@ -63,12 +69,38 @@ namespace DePhobia.VR
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
 
-            if (_ritualCanvas != null)
+            // Direct mouse hit-testing fallback: guarantees mouse click always works regardless of input module
+            if (Input.GetMouseButtonDown(0))
             {
-                var canvas = _ritualCanvas.GetComponent<Canvas>();
-                if (canvas != null && canvas.worldCamera == null)
+                Vector2 mousePos = Input.mousePosition;
+                var canvas = _ritualCanvas != null ? _ritualCanvas.GetComponent<Canvas>() : null;
+                Camera uiCam = (canvas != null && canvas.renderMode == RenderMode.ScreenSpaceCamera) ? canvas.worldCamera : null;
+
+                if (!_isEndRitual)
                 {
-                    canvas.worldCamera = Camera.main != null ? Camera.main : FindObjectOfType<Camera>();
+                    if (_beginBtnRect != null && RectTransformUtility.RectangleContainsScreenPoint(_beginBtnRect, mousePos, uiCam))
+                    {
+                        OnBeginClicked();
+                        return;
+                    }
+                    if (_exitBtnRect != null && RectTransformUtility.RectangleContainsScreenPoint(_exitBtnRect, mousePos, uiCam))
+                    {
+                        OnSafeExitClicked();
+                        return;
+                    }
+                }
+                else
+                {
+                    if (_endReturnBtnRect != null && RectTransformUtility.RectangleContainsScreenPoint(_endReturnBtnRect, mousePos, uiCam))
+                    {
+                        OnEndReturnClicked();
+                        return;
+                    }
+                    if (_endStayBtnRect != null && RectTransformUtility.RectangleContainsScreenPoint(_endStayBtnRect, mousePos, uiCam))
+                    {
+                        OnEndStayClicked();
+                        return;
+                    }
                 }
             }
 
@@ -165,17 +197,33 @@ namespace DePhobia.VR
             Destroy(gameObject, 0.5f);
         }
 
+        private void OnEndStayClicked()
+        {
+            _isRitualActive = false;
+            TherapyAudioManager.Instance.PlayFeedbackClick();
+            if (_ritualCanvas != null) Destroy(_ritualCanvas);
+            Destroy(gameObject, 0.5f);
+        }
+
         private void CreateStartCanvas(string phobiaName)
         {
             _ritualCanvas = new GameObject("StartRitualCanvas");
             _ritualCanvas.transform.SetParent(transform);
 
             var canvas = _ritualCanvas.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceCamera;
-            Camera cam = Camera.main != null ? Camera.main : FindObjectOfType<Camera>();
-            canvas.worldCamera = cam;
-            canvas.planeDistance = 1.2f;
-            canvas.sortingOrder = 900;
+            if (UnityEngine.XR.XRSettings.isDeviceActive)
+            {
+                canvas.renderMode = RenderMode.ScreenSpaceCamera;
+                Camera cam = Camera.main != null ? Camera.main : FindObjectOfType<Camera>();
+                canvas.worldCamera = cam;
+                canvas.planeDistance = 1.2f;
+            }
+            else
+            {
+                // In desktop mode, ScreenSpaceOverlay guarantees mouse coordinates align perfectly with 0 camera artifacts
+                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            }
+            canvas.sortingOrder = 999;
 
             var scaler = _ritualCanvas.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -189,6 +237,7 @@ namespace DePhobia.VR
             panelObj.transform.SetParent(_ritualCanvas.transform, false);
             var panelImg = panelObj.AddComponent<Image>();
             panelImg.color = new Color(0.141f, 0.137f, 0.220f, 0.95f);
+            panelImg.raycastTarget = false; // Do not intercept clicks destined for buttons
             var panelRect = panelObj.GetComponent<RectTransform>();
             panelRect.sizeDelta = new Vector2(560, 420);
 
@@ -201,6 +250,7 @@ namespace DePhobia.VR
             titleText.fontStyle = FontStyles.Bold;
             titleText.alignment = TextAlignmentOptions.Center;
             titleText.color = new Color(0.957f, 0.953f, 0.973f, 1f);
+            titleText.raycastTarget = false;
             var titleRect = titleObj.GetComponent<RectTransform>();
             titleRect.anchoredPosition = new Vector2(0, 150);
             titleRect.sizeDelta = new Vector2(500, 40);
@@ -213,6 +263,7 @@ namespace DePhobia.VR
             instText.fontSize = 15;
             instText.alignment = TextAlignmentOptions.Center;
             instText.color = new Color(0.714f, 0.702f, 0.808f, 1f);
+            instText.raycastTarget = false;
             var instRect = instObj.GetComponent<RectTransform>();
             instRect.anchoredPosition = new Vector2(0, 105);
             instRect.sizeDelta = new Vector2(500, 40);
@@ -222,6 +273,7 @@ namespace DePhobia.VR
             ringObj.transform.SetParent(panelObj.transform, false);
             _breathingRing = ringObj.AddComponent<Image>();
             _breathingRing.color = new Color(0.608f, 0.596f, 0.902f, 0.45f);
+            _breathingRing.raycastTarget = false;
             var ringRect = ringObj.GetComponent<RectTransform>();
             ringRect.anchoredPosition = new Vector2(0, 25);
             ringRect.sizeDelta = new Vector2(75, 75);
@@ -234,15 +286,16 @@ namespace DePhobia.VR
             _breathingText.fontSize = 16;
             _breathingText.alignment = TextAlignmentOptions.Center;
             _breathingText.color = new Color(0.910f, 0.722f, 0.620f, 1f);
+            _breathingText.raycastTarget = false;
             var breathRect = breathTextObj.GetComponent<RectTransform>();
             breathRect.anchoredPosition = new Vector2(0, -40);
             breathRect.sizeDelta = new Vector2(480, 30);
 
             // Begin Button: #7E9F94 (Serene)
-            CreateButton(panelObj.transform, "BeginButton", "Begin Session  [ Space / Click ]", new Vector2(0, -105), new Color(0.494f, 0.624f, 0.580f, 1f), OnBeginClicked);
+            _beginBtnRect = CreateButton(panelObj.transform, "BeginButton", "Begin Session  [ Click / Space ]", new Vector2(0, -105), new Color(0.494f, 0.624f, 0.580f, 1f), OnBeginClicked);
 
             // Safe Exit Button: #D48D8D (Gentle exit)
-            CreateButton(panelObj.transform, "ExitButton", "Return to Menu  [ Esc ]", new Vector2(0, -165), new Color(0.831f, 0.553f, 0.553f, 1f), OnSafeExitClicked);
+            _exitBtnRect = CreateButton(panelObj.transform, "ExitButton", "Return to Menu  [ Click / Esc ]", new Vector2(0, -165), new Color(0.831f, 0.553f, 0.553f, 1f), OnSafeExitClicked);
         }
 
         private void CreateEndCanvas(string phobiaName, string summaryMetrics, Action onReturnToMenu)
@@ -251,11 +304,18 @@ namespace DePhobia.VR
             _ritualCanvas.transform.SetParent(transform);
 
             var canvas = _ritualCanvas.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceCamera;
-            Camera cam = Camera.main != null ? Camera.main : FindObjectOfType<Camera>();
-            canvas.worldCamera = cam;
-            canvas.planeDistance = 1.2f;
-            canvas.sortingOrder = 900;
+            if (UnityEngine.XR.XRSettings.isDeviceActive)
+            {
+                canvas.renderMode = RenderMode.ScreenSpaceCamera;
+                Camera cam = Camera.main != null ? Camera.main : FindObjectOfType<Camera>();
+                canvas.worldCamera = cam;
+                canvas.planeDistance = 1.2f;
+            }
+            else
+            {
+                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            }
+            canvas.sortingOrder = 999;
 
             var scaler = _ritualCanvas.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -269,6 +329,7 @@ namespace DePhobia.VR
             panelObj.transform.SetParent(_ritualCanvas.transform, false);
             var panelImg = panelObj.AddComponent<Image>();
             panelImg.color = new Color(0.141f, 0.137f, 0.220f, 0.95f);
+            panelImg.raycastTarget = false;
             var panelRect = panelObj.GetComponent<RectTransform>();
             panelRect.sizeDelta = new Vector2(560, 420);
 
@@ -281,6 +342,7 @@ namespace DePhobia.VR
             titleText.fontStyle = FontStyles.Bold;
             titleText.alignment = TextAlignmentOptions.Center;
             titleText.color = new Color(0.957f, 0.953f, 0.973f, 1f);
+            titleText.raycastTarget = false;
             var titleRect = titleObj.GetComponent<RectTransform>();
             titleRect.anchoredPosition = new Vector2(0, 140);
             titleRect.sizeDelta = new Vector2(500, 40);
@@ -292,6 +354,7 @@ namespace DePhobia.VR
             instText.fontSize = 15;
             instText.alignment = TextAlignmentOptions.Center;
             instText.color = new Color(0.714f, 0.702f, 0.808f, 1f);
+            instText.raycastTarget = false;
             var instRect = instObj.GetComponent<RectTransform>();
             instRect.anchoredPosition = new Vector2(0, 85);
             instRect.sizeDelta = new Vector2(500, 40);
@@ -303,22 +366,17 @@ namespace DePhobia.VR
             metricsText.fontSize = 16;
             metricsText.alignment = TextAlignmentOptions.Center;
             metricsText.color = new Color(0.910f, 0.722f, 0.620f, 1f);
+            metricsText.raycastTarget = false;
             var metricsRect = metricsObj.GetComponent<RectTransform>();
             metricsRect.anchoredPosition = new Vector2(0, 25);
             metricsRect.sizeDelta = new Vector2(480, 35);
 
-            CreateButton(panelObj.transform, "ReturnButton", "Save & Return to Menu  [ Esc / Space ]", new Vector2(0, -65), new Color(0.494f, 0.624f, 0.580f, 1f), OnEndReturnClicked);
+            _endReturnBtnRect = CreateButton(panelObj.transform, "ReturnButton", "Save & Return to Menu  [ Click / Esc ]", new Vector2(0, -65), new Color(0.494f, 0.624f, 0.580f, 1f), OnEndReturnClicked);
 
-            CreateButton(panelObj.transform, "StayButton", "Remain Here & Breathe", new Vector2(0, -135), new Color(0.227f, 0.220f, 0.329f, 0.95f), () =>
-            {
-                _isRitualActive = false;
-                TherapyAudioManager.Instance.PlayFeedbackClick();
-                if (_ritualCanvas != null) Destroy(_ritualCanvas);
-                Destroy(gameObject, 0.5f);
-            });
+            _endStayBtnRect = CreateButton(panelObj.transform, "StayButton", "Remain Here & Breathe", new Vector2(0, -135), new Color(0.227f, 0.220f, 0.329f, 0.95f), OnEndStayClicked);
         }
 
-        private void CreateButton(Transform parent, string name, string label, Vector2 pos, Color btnColor, UnityEngine.Events.UnityAction action)
+        private RectTransform CreateButton(Transform parent, string name, string label, Vector2 pos, Color btnColor, UnityEngine.Events.UnityAction action)
         {
             var btnObj = new GameObject(name);
             btnObj.transform.SetParent(parent, false);
@@ -348,6 +406,8 @@ namespace DePhobia.VR
             var textRect = textObj.GetComponent<RectTransform>();
             textRect.anchorMin = Vector2.zero; textRect.anchorMax = Vector2.one;
             textRect.offsetMin = Vector2.zero; textRect.offsetMax = Vector2.zero;
+
+            return btnRect;
         }
     }
 }

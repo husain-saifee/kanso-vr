@@ -66,30 +66,26 @@ namespace DePhobia.VR
                 es = esGo.AddComponent<EventSystem>();
             }
 
-            // Clean up any legacy or dummy input modules (such as GvrPointerInputModule or StandaloneInputModule)
-            var modules = es.GetComponents<BaseInputModule>();
-            foreach (var mod in modules)
+            // Remove legacy GvrPointerInputModule if present
+            var gvrMod = es.GetComponent<GvrPointerInputModule>();
+            if (gvrMod != null)
             {
-                if (mod != null)
-                {
-#if ENABLE_INPUT_SYSTEM
-                    if (!(mod is InputSystemUIInputModule))
-                    {
-                        DestroyImmediate(mod);
-                    }
-#else
-                    if (!(mod is StandaloneInputModule))
-                    {
-                        DestroyImmediate(mod);
-                    }
-#endif
-                }
+                DestroyImmediate(gvrMod);
             }
 
 #if ENABLE_INPUT_SYSTEM
-            if (es.GetComponent<InputSystemUIInputModule>() == null)
+            var inputModule = es.GetComponent<InputSystemUIInputModule>();
+            if (inputModule == null)
             {
-                es.gameObject.AddComponent<InputSystemUIInputModule>();
+                inputModule = es.gameObject.AddComponent<InputSystemUIInputModule>();
+            }
+            try
+            {
+                inputModule.AssignDefaultActions();
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning("[VRUIEventSystemHelper] AssignDefaultActions note: " + ex.Message);
             }
 #else
             if (es.GetComponent<StandaloneInputModule>() == null)

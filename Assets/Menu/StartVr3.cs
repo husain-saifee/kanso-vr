@@ -5,7 +5,7 @@ using DePhobia.VR;
 /// <summary>
 /// Scene lifecycle controller for Acrophobia (High Elevation) simulation.
 /// Initializes the patient session, anchors VRPlayerRig to the ascending hoverboard,
-/// spawns the in-world emergency exit beacon, and conducts the calming start ritual.
+/// positions hoverboard safely over the city avenue, and conducts the calming start ritual.
 /// </summary>
 public class StartVr3 : MonoBehaviour
 {
@@ -17,6 +17,33 @@ public class StartVr3 : MonoBehaviour
 
         _lookScript = FindObjectOfType<vrlook>();
         var cam = Camera.main;
+
+        // Strip any conflicting Rigidbody or Collider on Camera.main from legacy scene
+        if (cam != null)
+        {
+            var camRb = cam.GetComponent<Rigidbody>();
+            if (camRb != null) Destroy(camRb);
+            var camCol = cam.GetComponent<Collider>();
+            if (camCol != null) Destroy(camCol);
+        }
+
+        // Reposition hoverboard from empty void (-201, -180) to central city avenue (0, 28, 0)
+        if (_lookScript != null)
+        {
+            if (_lookScript.transform.position.x < -50f || _lookScript.transform.position.z < -50f)
+            {
+                _lookScript.transform.position = new Vector3(0f, 28f, 0f);
+                _lookScript.transform.rotation = Quaternion.Euler(0f, 45f, 0f);
+            }
+
+            var hoverRb = _lookScript.GetComponent<Rigidbody>();
+            if (hoverRb != null)
+            {
+                hoverRb.useGravity = false;
+                hoverRb.isKinematic = true;
+                hoverRb.constraints = RigidbodyConstraints.FreezeAll;
+            }
+        }
 
         // Ensure VR Rig is properly anchored to the hoverboard
         var rig = FindObjectOfType<VRPlayerRig>();
@@ -34,12 +61,22 @@ public class StartVr3 : MonoBehaviour
             rig.enableLocomotion = false; // Hoverboard governs platform ascension
             rig.enableGravity = false;
 
+            var cc = rig.GetComponent<CharacterController>();
+            if (cc != null) cc.enabled = false;
+
             if (cam != null)
             {
                 cam.transform.SetParent(rigGo.transform, false);
                 cam.transform.localPosition = new Vector3(0, 1.6f, 0);
                 rig.headCamera = cam.transform;
             }
+        }
+        else
+        {
+            rig.enableLocomotion = false;
+            rig.enableGravity = false;
+            var cc = rig.GetComponent<CharacterController>();
+            if (cc != null) cc.enabled = false;
         }
 
         if (_lookScript != null && cam != null)
