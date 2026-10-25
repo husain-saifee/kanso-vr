@@ -105,7 +105,7 @@ public class vrlook : MonoBehaviour
             transform.rotation = Quaternion.Euler(0f, 45f, 0f);
         }
 
-        ValChange.hf = transform.position.y;
+        ValChange.hf = (int)transform.position.y;
         ValChange.HighestHigh = Mathf.Max(ValChange.HighestHigh, transform.position.y);
     }
 
@@ -186,7 +186,7 @@ public class vrlook : MonoBehaviour
             currentY = Mathf.Clamp(currentY, MIN_HOVERBOARD_Y, MAX_HOVERBOARD_Y);
             transform.position = new Vector3(transform.position.x, currentY, transform.position.z);
 
-            ValChange.hf = currentY;
+            ValChange.hf = (int)currentY;
             ValChange.HighestHigh = Mathf.Max(ValChange.HighestHigh, currentY);
             PatientSessionManager.Instance.UpdatePeakMetric(ValChange.HighestHigh);
 
