@@ -218,21 +218,33 @@ public class mainmenu : MonoBehaviour
         TherapyAudioManager.Instance.PlayFeedbackClick();
 
         if (b != null) b.SetActive(true);
-        if (a != null) a.SetActive(false);
         if (c != null) c.SetActive(true);
 
         flag = 1;
-        StartCoroutine(QuitRoutine(1.2f));
-    }
 
-    private IEnumerator QuitRoutine(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        Debug.Log("[DePhobia] Application quit requested safely.");
-        Application.Quit();
+        if (VRFadeManager.Instance != null)
+        {
+            VRFadeManager.Instance.FadeOut(0.8f, () =>
+            {
+                Debug.Log("[Kanso VR] Application quit requested safely.");
+                Application.Quit();
 #if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
+                UnityEditor.EditorApplication.isPlaying = false;
 #endif
+            });
+        }
+        else
+        {
+            Application.Quit();
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#endif
+        }
+
+        if (a != null && a != gameObject)
+        {
+            a.SetActive(false);
+        }
     }
 
     public void CLAUSSTAT()
