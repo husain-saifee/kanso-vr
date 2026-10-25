@@ -9,20 +9,52 @@ using DePhobia.VR;
 /// </summary>
 public class StartVr : MonoBehaviour
 {
-    private xposmove _posWall;
-    private xnegmove _negWall;
+    private xposmove[] _posWalls;
+    private xnegmove[] _negWalls;
     private bool _wallsActive = false;
     private bool _completionShown = false;
 
     private void Start()
     {
+        // Enforce that walls never move before the start ritual finishes
+        xposmove.sessionStarted = false;
+        xnegmove.sessionStarted = false;
+
         PatientSessionManager.Instance.StartSession("Claustrophobia");
 
-        _posWall = FindObjectOfType<xposmove>();
-        _negWall = FindObjectOfType<xnegmove>();
+        _posWalls = FindObjectsOfType<xposmove>();
+        _negWalls = FindObjectsOfType<xnegmove>();
 
-        if (_posWall != null) _posWall.enabled = false;
-        if (_negWall != null) _negWall.enabled = false;
+        var sm = TherapySettingsManager.Instance;
+        float calibratedSpeed = (sm != null) ? sm.clausSpeed : 0.05f;
+        float moveAfter = (sm != null) ? sm.clausMoveAfter : 3.0f;
+        float moveDuration = (sm != null) ? sm.clausMoveDuration : 2.0f;
+
+        if (_posWalls != null)
+        {
+            foreach (var wall in _posWalls)
+            {
+                wall.speed = calibratedSpeed;
+                wall.timerate = moveAfter;
+                wall.vtime = moveDuration;
+                wall.enabled = false;
+                var rb = wall.GetComponent<Rigidbody>();
+                if (rb != null) rb.velocity = Vector3.zero;
+            }
+        }
+
+        if (_negWalls != null)
+        {
+            foreach (var wall in _negWalls)
+            {
+                wall.speed = calibratedSpeed;
+                wall.timerate = moveAfter;
+                wall.vtime = moveDuration;
+                wall.enabled = false;
+                var rb = wall.GetComponent<Rigidbody>();
+                if (rb != null) rb.velocity = Vector3.zero;
+            }
+        }
 
         // Clean up any harsh mechanical hard drive audio sources
         var audioSources = FindObjectsOfType<AudioSource>();
@@ -69,8 +101,24 @@ public class StartVr : MonoBehaviour
             TherapySessionRitual.ShowStartRitual("Enclosed Space", () =>
             {
                 _wallsActive = true;
-                if (_posWall != null) _posWall.enabled = true;
-                if (_negWall != null) _negWall.enabled = true;
+                xposmove.sessionStarted = true;
+                xnegmove.sessionStarted = true;
+
+                if (_posWalls != null)
+                {
+                    foreach (var wall in _posWalls)
+                    {
+                        wall.enabled = true;
+                    }
+                }
+
+                if (_negWalls != null)
+                {
+                    foreach (var wall in _negWalls)
+                    {
+                        wall.enabled = true;
+                    }
+                }
 
                 TherapyAudioManager.TriggerCaption("Walls will begin moving gently. Take slow, steady breaths.", 5.0f);
             });
@@ -81,9 +129,34 @@ public class StartVr : MonoBehaviour
     {
         if (_wallsActive && !_completionShown)
         {
-            // Check if walls reached the safe boundary (-2.8m and +2.8m)
-            if (_posWall != null && _posWall.transform.position.x >= -2.85f &&
-                _negWall != null && _negWall.transform.position.x <= 2.85f)
+            // Check if any wall has reached the safe boundary (-2.85m and +2.85m)
+            bool boundaryReached = false;
+
+            if (_posWalls != null && _posWalls.Length > 0)
+            {
+                foreach (var wall in _posWalls)
+                {
+                    if (wall != null && wall.transform.position.x >= -2.85f)
+                    {
+                        boundaryReached = true;
+                        break;
+                    }
+                }
+            }
+
+            if (_negWalls != null && _negWalls.Length > 0)
+            {
+                foreach (var wall in _negWalls)
+                {
+                    if (wall != null && wall.transform.position.x <= 2.85f)
+                    {
+                        boundaryReached = true;
+                        break;
+                    }
+                }
+            }
+
+            if (boundaryReached)
             {
                 _completionShown = true;
                 TherapyAudioManager.TriggerCaption("Walls have stabilized safely. Take a moment to breathe.", 5.0f);
@@ -124,6 +197,9 @@ public class StartVr : MonoBehaviour
 
     public void SaveAndReturn(bool completed = false)
     {
+        xposmove.sessionStarted = false;
+        xnegmove.sessionStarted = false;
+
         float cycleDuration = TherapySettingsManager.Instance.clausMoveDuration + TherapySettingsManager.Instance.clausMoveAfter;
         int count = (cycleDuration > 0.1f) ? (int)(xnegmove.tmeas / cycleDuration) : 0;
         string summary = $"Speed: {TherapySettingsManager.Instance.clausSpeed:F3}, Cycles: {count}";

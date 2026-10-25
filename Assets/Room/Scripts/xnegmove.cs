@@ -3,6 +3,8 @@ using DePhobia.Core;
 
 public class xnegmove : MonoBehaviour
 {
+    public static bool sessionStarted = false;
+
     public float speed;
     public float timerate;
     public float vtime;
@@ -17,9 +19,17 @@ public class xnegmove : MonoBehaviour
     private int flag = 0;
     private int flag1 = 1;
 
-    void Start()
+    void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.velocity = Vector3.zero;
+        }
+    }
+
+    void Start()
+    {
         tstart = Time.time;
 
         var sm = TherapySettingsManager.Instance;
@@ -30,9 +40,23 @@ public class xnegmove : MonoBehaviour
 
     void Update()
     {
+        if (!sessionStarted)
+        {
+            if (rb != null) rb.velocity = Vector3.zero;
+            tstart = Time.time;
+            return;
+        }
+
+        // Safety clamp: do not move beyond safe threshold (+2.85m)
+        if (transform.position.x <= 2.85f)
+        {
+            if (rb != null) rb.velocity = Vector3.zero;
+            return;
+        }
+
         time = Time.time - tstart;
 
-        if (transform.position.x > 2.8f)
+        if (transform.position.x > 2.85f)
         {
             if (flag1 == 1 && (time - mstart) >= timerate)
             {
