@@ -8,7 +8,7 @@ namespace DePhobia.VR
     /// <summary>
     /// In-world emergency exit beacon for patients in distress.
     /// Strictly click-activated: gazing or looking around NEVER triggers auto-exit.
-    /// Rendered as a clean, single-sided WorldSpace slate that never wraps or clips text.
+    /// Rendered as a bold, high-contrast, crystal-clear WorldSpace slate with zero occlusions.
     /// </summary>
     [RequireComponent(typeof(BoxCollider))]
     public class VREmergencyExitBeacon : MonoBehaviour
@@ -25,7 +25,7 @@ namespace DePhobia.VR
             _collider = GetComponent<BoxCollider>();
             if (_collider != null)
             {
-                _collider.size = new Vector3(0.55f, 0.2f, 0.05f);
+                _collider.size = new Vector3(0.65f, 0.22f, 0.05f);
                 _collider.isTrigger = false;
             }
         }
@@ -42,7 +42,7 @@ namespace DePhobia.VR
                 if (subLabel != null)
                 {
                     subLabel.text = "Click to exit session";
-                    subLabel.color = ThemeTokens.TextPrimary;
+                    subLabel.color = Color.white;
                 }
                 if (_panelImage != null)
                 {
@@ -54,12 +54,12 @@ namespace DePhobia.VR
                 if (statusLabel != null)
                 {
                     statusLabel.text = "Return to Menu";
-                    statusLabel.color = ThemeTokens.TextPrimary;
+                    statusLabel.color = Color.white;
                 }
                 if (subLabel != null)
                 {
                     subLabel.text = "Click to exit safely";
-                    subLabel.color = ThemeTokens.TextSecondary;
+                    subLabel.color = new Color(0.78f, 0.85f, 0.75f, 1f);
                 }
                 if (_panelImage != null)
                 {
@@ -162,16 +162,28 @@ namespace DePhobia.VR
             canvas.renderMode = RenderMode.WorldSpace;
             canvas.worldCamera = Camera.main;
             canvas.sortingOrder = 300;
+            canvas.additionalShaderChannels = AdditionalCanvasShaderChannels.TexCoord1 | AdditionalCanvasShaderChannels.Normal | AdditionalCanvasShaderChannels.Tangent;
 
             var scaler = canvasObj.AddComponent<CanvasScaler>();
             scaler.dynamicPixelsPerUnit = 10;
             canvasObj.AddComponent<GraphicRaycaster>();
 
             var cRect = canvasObj.GetComponent<RectTransform>();
-            cRect.sizeDelta = new Vector2(280, 80);
-            cRect.localScale = Vector3.one * 0.0018f;
+            cRect.sizeDelta = new Vector2(320, 96);
+            cRect.localScale = Vector3.one * 0.002f;
 
-            // Panel Background
+            // Outer crisp border frame
+            var borderObj = new GameObject("BorderFrame");
+            borderObj.transform.SetParent(canvasObj.transform, false);
+            var borderImg = borderObj.AddComponent<Image>();
+            borderImg.color = ThemeTokens.AccentSage;
+            var brRect = borderObj.GetComponent<RectTransform>();
+            brRect.anchorMin = Vector2.zero;
+            brRect.anchorMax = Vector2.one;
+            brRect.offsetMin = Vector2.zero;
+            brRect.offsetMax = Vector2.zero;
+
+            // Inner dark panel
             var panelObj = new GameObject("Panel");
             panelObj.transform.SetParent(canvasObj.transform, false);
             _panelImage = panelObj.AddComponent<Image>();
@@ -183,46 +195,26 @@ namespace DePhobia.VR
             ThemeTokens.StyleButtonColors(btn, ThemeTokens.SurfacePanel, ThemeTokens.SurfaceHover, ThemeTokens.GentleExitClay);
 
             var pRect = panelObj.GetComponent<RectTransform>();
-            pRect.anchorMin = Vector2.zero; pRect.anchorMax = Vector2.one;
-            pRect.offsetMin = Vector2.zero; pRect.offsetMax = Vector2.zero;
+            pRect.anchorMin = Vector2.zero;
+            pRect.anchorMax = Vector2.one;
+            pRect.offsetMin = new Vector2(3, 3);
+            pRect.offsetMax = new Vector2(-3, -3);
 
-            // Top Accent Line
-            var lineObj = new GameObject("AccentLine");
-            lineObj.transform.SetParent(panelObj.transform, false);
-            var lineImg = lineObj.AddComponent<Image>();
-            lineImg.color = ThemeTokens.AccentSage;
-            var lRect = lineObj.GetComponent<RectTransform>();
-            lRect.anchorMin = new Vector2(0, 1); lRect.anchorMax = new Vector2(1, 1);
-            lRect.pivot = new Vector2(0.5f, 1);
-            lRect.anchoredPosition = Vector2.zero;
-            lRect.sizeDelta = new Vector2(0, 3);
-
-            // Title: Return to Menu
-            statusLabel = ThemeTokens.CreateLabel(panelObj.transform, "StatusLabel", "Return to Menu", 17, ThemeTokens.TextPrimary, TextAlignmentOptions.Center, true);
+            // Title: Pure bright white (#FFFFFF), bold, 22pt, crystal clear
+            statusLabel = ThemeTokens.CreateLabel(panelObj.transform, "StatusLabel", "Return to Menu", 22, Color.white, TextAlignmentOptions.Center, true);
             statusLabel.enableWordWrapping = false;
             statusLabel.overflowMode = TextOverflowModes.Ellipsis;
             var sRect = statusLabel.GetComponent<RectTransform>();
-            sRect.anchoredPosition = new Vector2(0, 10);
-            sRect.sizeDelta = new Vector2(260, 26);
+            sRect.anchoredPosition = new Vector2(0, 12);
+            sRect.sizeDelta = new Vector2(300, 32);
 
-            // Subtitle: Click to exit safely
-            subLabel = ThemeTokens.CreateLabel(panelObj.transform, "SubLabel", "Click to exit safely", 11, ThemeTokens.TextSecondary, TextAlignmentOptions.Center);
+            // Subtitle: Soft clear matcha sage, 13pt
+            subLabel = ThemeTokens.CreateLabel(panelObj.transform, "SubLabel", "Click to exit safely", 13, new Color(0.78f, 0.85f, 0.75f, 1f), TextAlignmentOptions.Center);
             subLabel.enableWordWrapping = false;
             subLabel.overflowMode = TextOverflowModes.Ellipsis;
             var subRect = subLabel.GetComponent<RectTransform>();
             subRect.anchoredPosition = new Vector2(0, -18);
-            subRect.sizeDelta = new Vector2(260, 20);
-
-            // Backplate (so viewed from behind, it's a solid dark mineral panel with NO text)
-            var backObj = new GameObject("BackPlate");
-            backObj.transform.SetParent(canvasObj.transform, false);
-            backObj.transform.localPosition = new Vector3(0, 0, 0.005f);
-            backObj.transform.localRotation = Quaternion.Euler(0, 180f, 0);
-            var backImg = backObj.AddComponent<Image>();
-            backImg.color = ThemeTokens.SurfacePanel;
-            var bRect = backObj.GetComponent<RectTransform>();
-            bRect.anchorMin = Vector2.zero; bRect.anchorMax = Vector2.one;
-            bRect.offsetMin = Vector2.zero; bRect.offsetMax = Vector2.zero;
+            subRect.sizeDelta = new Vector2(300, 24);
         }
     }
 }
