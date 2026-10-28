@@ -26,7 +26,9 @@ public class mainmenu : MonoBehaviour
 
     // View State
     private enum MenuState { Portal, History, Settings }
+#pragma warning disable 0414
     private MenuState _currentState = MenuState.Portal;
+#pragma warning restore 0414
     private int _activeTabIndex = 0; // 0 = Claustro, 1 = Aqua, 2 = Acro
     private string _activePreset = "Standard";
 

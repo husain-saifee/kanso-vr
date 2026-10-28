@@ -142,7 +142,6 @@ namespace DePhobia.VR
             statusLabel.fontSize = 2.4f;
             statusLabel.alignment = TextAlignmentOptions.Center;
             statusLabel.color = ThemeTokens.TextPrimary;
-            if (ThemeTokens.ModernFont != null) statusLabel.font = ThemeTokens.ModernFont;
             var labelRect = labelObj.GetComponent<RectTransform>();
             if (labelRect != null) labelRect.sizeDelta = new Vector2(0.68f, 0.2f);
 
@@ -154,7 +153,6 @@ namespace DePhobia.VR
             subLabel.fontSize = 1.3f;
             subLabel.alignment = TextAlignmentOptions.Center;
             subLabel.color = ThemeTokens.TextSecondary;
-            if (ThemeTokens.ModernFont != null) subLabel.font = ThemeTokens.ModernFont;
             var subRect = subObj.GetComponent<RectTransform>();
             if (subRect != null) subRect.sizeDelta = new Vector2(0.68f, 0.16f);
         }
