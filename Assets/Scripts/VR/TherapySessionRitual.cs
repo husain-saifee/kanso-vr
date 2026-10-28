@@ -11,12 +11,14 @@ namespace DePhobia.VR
     /// Manages the Ambient Horizon Arrival (Start Ritual) and Clean Milestone Closure (End Ritual).
     /// Styled under Forest Mineral & Sage with zero blue or violet tones.
     /// Start Ritual: Non-blocking; provides 3-breath ambient pacing and starts on gaze forward or tap.
-    /// End Ritual: Smooth fade to a clean milestone closure card with duration and metrics.
+    /// End Ritual: Stops the session and presents a calm Session Review card with data readout,
+    /// giving the patient two clear interactive choices: [ Restart Session ] or [ Return to Main Menu ].
     /// </summary>
     public class TherapySessionRitual : MonoBehaviour
     {
         private Action _onStartCompleted;
         private Action _onEndCompleted;
+        private Action _onRestartCompleted;
         private GameObject _ritualCanvas;
         private bool _isRitualActive = false;
         private bool _isEndRitual = false;
@@ -29,11 +31,11 @@ namespace DePhobia.VR
             return ritual;
         }
 
-        public static TherapySessionRitual ShowEndRitual(string phobiaName, string summaryMetrics, Action onReturnToMenu)
+        public static TherapySessionRitual ShowEndRitual(string phobiaName, string summaryMetrics, Action onReturnToMenu, Action onRestart = null)
         {
             var go = new GameObject("TherapySessionRitual");
             var ritual = go.AddComponent<TherapySessionRitual>();
-            ritual.InitializeEndRitual(phobiaName, summaryMetrics, onReturnToMenu);
+            ritual.InitializeEndRitual(phobiaName, summaryMetrics, onReturnToMenu, onRestart);
             return ritual;
         }
 
@@ -43,18 +45,22 @@ namespace DePhobia.VR
             _isRitualActive = true;
             _isEndRitual = false;
 
-
             // Settle sequence: 3 breaths (approx 5-6s) or immediate press of Space/Enter/Click
             StartCoroutine(StartRitualPacingRoutine());
         }
 
-        private void InitializeEndRitual(string phobiaName, string summaryMetrics, Action onReturnToMenu)
+        private void InitializeEndRitual(string phobiaName, string summaryMetrics, Action onReturnToMenu, Action onRestart)
         {
             _onEndCompleted = onReturnToMenu;
+            _onRestartCompleted = onRestart;
             _isRitualActive = true;
             _isEndRitual = true;
 
-            // Immediately fade to black, then show clean milestone card
+            // Ensure cursor is unlocked and visible for review selection on desktop
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+
+            // Fade to dark and display clean session review card
             if (VRFadeManager.Instance != null)
             {
                 VRFadeManager.Instance.FadeOut(0.5f, () =>
@@ -111,28 +117,84 @@ namespace DePhobia.VR
 
             if (_isEndRitual)
             {
-                if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Escape) || Input.GetMouseButtonDown(0))
+                // Keyboard shortcuts for convenience (does not auto-trigger on random clicks)
+                if (Input.GetKeyDown(KeyCode.R))
+                {
+                    OnEndRestartClicked();
+                }
+                else if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.M))
                 {
                     OnEndReturnClicked();
                 }
             }
         }
 
-        private void OnEndReturnClicked()
+        public void OnEndRestartClicked()
         {
             if (!_isRitualActive) return;
             _isRitualActive = false;
 
-            TherapyAudioManager.Instance.PlayFeedbackClick();
-            _onEndCompleted?.Invoke();
+            if (TherapyAudioManager.Instance != null)
+                TherapyAudioManager.Instance.PlayFeedbackClick();
 
-            if (VRFadeManager.Instance != null)
+            var rig = FindObjectOfType<VRPlayerRig>();
+            if (rig != null) rig.SendHapticImpulse(0.25f, 0.08f, UnityEngine.XR.XRNode.RightHand);
+
+            if (_onRestartCompleted != null)
             {
-                VRFadeManager.Instance.FadeAndLoadScene(0, 0.5f);
+                _onRestartCompleted.Invoke();
             }
             else
             {
-                UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+                if (PatientSessionManager.Instance != null)
+                {
+                    PatientSessionManager.Instance.EndAndSaveSession(completed: true, extraParams: "Session Restarted by Patient");
+                }
+
+                int activeScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex;
+                if (VRFadeManager.Instance != null)
+                {
+                    VRFadeManager.Instance.FadeAndLoadScene(activeScene, 0.5f);
+                }
+                else
+                {
+                    UnityEngine.SceneManagement.SceneManager.LoadScene(activeScene);
+                }
+            }
+
+            Destroy(gameObject, 0.5f);
+        }
+
+        public void OnEndReturnClicked()
+        {
+            if (!_isRitualActive) return;
+            _isRitualActive = false;
+
+            if (TherapyAudioManager.Instance != null)
+                TherapyAudioManager.Instance.PlayFeedbackClick();
+
+            var rig = FindObjectOfType<VRPlayerRig>();
+            if (rig != null) rig.SendHapticImpulse(0.3f, 0.10f, UnityEngine.XR.XRNode.RightHand);
+
+            if (_onEndCompleted != null)
+            {
+                _onEndCompleted.Invoke();
+            }
+            else
+            {
+                if (PatientSessionManager.Instance != null)
+                {
+                    PatientSessionManager.Instance.EndAndSaveSession(completed: true, extraParams: "Session Completed");
+                }
+
+                if (VRFadeManager.Instance != null)
+                {
+                    VRFadeManager.Instance.FadeAndLoadScene(0, 0.5f);
+                }
+                else
+                {
+                    UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+                }
             }
 
             Destroy(gameObject, 0.5f);
@@ -154,19 +216,19 @@ namespace DePhobia.VR
             _ritualCanvas.AddComponent<GraphicRaycaster>();
 
             var cRect = _ritualCanvas.GetComponent<RectTransform>();
-            cRect.sizeDelta = new Vector2(500, 340);
+            cRect.sizeDelta = new Vector2(540, 400);
             cRect.localScale = Vector3.one * 0.0022f;
 
             if (cam != null)
             {
                 Vector3 forward = cam.transform.forward; forward.y = 0;
-                if (forward.sqrMagnitude < 0.01f) forward = Vector3.forward;
+                if (forward.sqrMagnitude < 0.01f) forward = cam.transform.forward;
                 forward.Normalize();
                 _ritualCanvas.transform.position = cam.transform.position + (forward * 1.8f);
                 _ritualCanvas.transform.rotation = Quaternion.LookRotation(forward);
             }
 
-            // Background Surface: Forest Mineral & Sage
+            // Main Background Panel (Forest Mineral & Sage)
             var panelObj = new GameObject("Panel");
             panelObj.transform.SetParent(_ritualCanvas.transform, false);
             var panelImg = panelObj.AddComponent<Image>();
@@ -175,41 +237,88 @@ namespace DePhobia.VR
             panelRect.anchorMin = Vector2.zero; panelRect.anchorMax = Vector2.one;
             panelRect.offsetMin = Vector2.zero; panelRect.offsetMax = Vector2.zero;
 
-            // Title: #F3F5F2
-            var title = ThemeTokens.CreateLabel(panelObj.transform, "Title", "Session Completed", 22, ThemeTokens.TextPrimary, TextAlignmentOptions.Center, true);
+            // Header Title
+            var title = ThemeTokens.CreateLabel(panelObj.transform, "Title", "Session Complete • Milestone Reached", 20, ThemeTokens.TextPrimary, TextAlignmentOptions.Center, true);
             var titleRect = title.GetComponent<RectTransform>();
-            titleRect.anchoredPosition = new Vector2(0, 110);
-            titleRect.sizeDelta = new Vector2(440, 32);
+            titleRect.anchoredPosition = new Vector2(0, 148);
+            titleRect.sizeDelta = new Vector2(500, 30);
 
-            // Subtitle: #9AA299
-            var sub = ThemeTokens.CreateLabel(panelObj.transform, "Subtitle", "Take a quiet moment to breathe. When you are ready, return safely.", 14, ThemeTokens.TextSecondary, TextAlignmentOptions.Center);
+            // Subtitle
+            var sub = ThemeTokens.CreateLabel(panelObj.transform, "Subtitle", "Take a quiet moment to review your exposure progress.", 13, ThemeTokens.TextSecondary, TextAlignmentOptions.Center);
             var subRect = sub.GetComponent<RectTransform>();
-            subRect.anchoredPosition = new Vector2(0, 65);
-            subRect.sizeDelta = new Vector2(440, 36);
+            subRect.anchoredPosition = new Vector2(0, 115);
+            subRect.sizeDelta = new Vector2(500, 24);
 
-            // Summary Metrics readout
-            var metrics = ThemeTokens.CreateLabel(panelObj.transform, "Metrics", summaryMetrics, 15, ThemeTokens.AccentSage, TextAlignmentOptions.Center, true);
-            var mRect = metrics.GetComponent<RectTransform>();
-            mRect.anchoredPosition = new Vector2(0, 10);
-            mRect.sizeDelta = new Vector2(440, 32);
+            // Review Data Box (Inner surface)
+            var dataBox = new GameObject("DataBox");
+            dataBox.transform.SetParent(panelObj.transform, false);
+            var dataBoxImg = dataBox.AddComponent<Image>();
+            dataBoxImg.color = ThemeTokens.SurfaceInactive;
+            var dbRect = dataBox.GetComponent<RectTransform>();
+            dbRect.anchoredPosition = new Vector2(0, 15);
+            dbRect.sizeDelta = new Vector2(480, 130);
 
-            // Button: [ Return to Sanctuary ]
-            var btnObj = new GameObject("ReturnButton");
-            btnObj.transform.SetParent(panelObj.transform, false);
-            var btnImg = btnObj.AddComponent<Image>();
-            btnImg.color = ThemeTokens.AccentSage;
-            var btn = btnObj.AddComponent<Button>();
-            btn.targetGraphic = btnImg;
-            btn.onClick.AddListener(OnEndReturnClicked);
+            // Row 1: Scenario
+            var row1 = ThemeTokens.CreateLabel(dataBox.transform, "Scenario", $"Scenario:  {phobiaName}", 14, ThemeTokens.TextPrimary, TextAlignmentOptions.Left, true);
+            var r1Rect = row1.GetComponent<RectTransform>();
+            r1Rect.anchoredPosition = new Vector2(0, 38);
+            r1Rect.sizeDelta = new Vector2(440, 22);
 
-            var btnRect = btnObj.GetComponent<RectTransform>();
-            btnRect.anchoredPosition = new Vector2(0, -65);
-            btnRect.sizeDelta = new Vector2(360, 48);
+            // Row 2: Metrics / Peak Altitude
+            var row2 = ThemeTokens.CreateLabel(dataBox.transform, "Metrics", summaryMetrics, 14, ThemeTokens.AccentSage, TextAlignmentOptions.Left, true);
+            var r2Rect = row2.GetComponent<RectTransform>();
+            r2Rect.anchoredPosition = new Vector2(0, 10);
+            r2Rect.sizeDelta = new Vector2(440, 22);
 
-            var btnText = ThemeTokens.CreateLabel(btnObj.transform, "Text", "Return to Sanctuary", 16, ThemeTokens.TextPrimary, TextAlignmentOptions.Center, true);
-            var btRect = btnText.GetComponent<RectTransform>();
-            btRect.anchorMin = Vector2.zero; btRect.anchorMax = Vector2.one;
-            btRect.offsetMin = Vector2.zero; btRect.offsetMax = Vector2.zero;
+            // Row 3: Status
+            var row3 = ThemeTokens.CreateLabel(dataBox.transform, "Status", "Outcome:  Exposure Goal Accomplished Successfully", 13, ThemeTokens.TextSecondary, TextAlignmentOptions.Left);
+            var r3Rect = row3.GetComponent<RectTransform>();
+            r3Rect.anchoredPosition = new Vector2(0, -18);
+            r3Rect.sizeDelta = new Vector2(440, 20);
+
+            // Row 4: Helper hint
+            var row4 = ThemeTokens.CreateLabel(dataBox.transform, "Hint", "Your session metrics have been securely recorded in the clinical log.", 12, ThemeTokens.TextMuted, TextAlignmentOptions.Left);
+            var r4Rect = row4.GetComponent<RectTransform>();
+            r4Rect.anchoredPosition = new Vector2(0, -42);
+            r4Rect.sizeDelta = new Vector2(440, 18);
+
+            // Button 1: [ Restart Session ] (Left)
+            var restartBtnObj = new GameObject("RestartButton");
+            restartBtnObj.transform.SetParent(panelObj.transform, false);
+            var restartImg = restartBtnObj.AddComponent<Image>();
+            restartImg.color = ThemeTokens.SurfaceBorder;
+            var restartBtn = restartBtnObj.AddComponent<Button>();
+            restartBtn.targetGraphic = restartImg;
+            ThemeTokens.StyleButtonColors(restartBtn, ThemeTokens.SurfaceBorder, ThemeTokens.SurfaceHover, ThemeTokens.CanvasBg);
+            restartBtn.onClick.AddListener(OnEndRestartClicked);
+
+            var rBtnRect = restartBtnObj.GetComponent<RectTransform>();
+            rBtnRect.anchoredPosition = new Vector2(-120, -120);
+            rBtnRect.sizeDelta = new Vector2(220, 48);
+
+            var rBtnText = ThemeTokens.CreateLabel(restartBtnObj.transform, "Text", "↺  Restart Session", 15, ThemeTokens.TextPrimary, TextAlignmentOptions.Center, true);
+            var rbtRect = rBtnText.GetComponent<RectTransform>();
+            rbtRect.anchorMin = Vector2.zero; rbtRect.anchorMax = Vector2.one;
+            rbtRect.offsetMin = Vector2.zero; rbtRect.offsetMax = Vector2.zero;
+
+            // Button 2: [ Return to Main Menu ] (Right)
+            var returnBtnObj = new GameObject("ReturnButton");
+            returnBtnObj.transform.SetParent(panelObj.transform, false);
+            var returnImg = returnBtnObj.AddComponent<Image>();
+            returnImg.color = ThemeTokens.AccentSage;
+            var returnBtn = returnBtnObj.AddComponent<Button>();
+            returnBtn.targetGraphic = returnImg;
+            ThemeTokens.StyleButtonColors(returnBtn, ThemeTokens.AccentSage, ThemeTokens.AccentSageHover, ThemeTokens.CanvasBg);
+            returnBtn.onClick.AddListener(OnEndReturnClicked);
+
+            var retBtnRect = returnBtnObj.GetComponent<RectTransform>();
+            retBtnRect.anchoredPosition = new Vector2(120, -120);
+            retBtnRect.sizeDelta = new Vector2(220, 48);
+
+            var retBtnText = ThemeTokens.CreateLabel(returnBtnObj.transform, "Text", "✓  Main Menu", 15, ThemeTokens.AccentSageText, TextAlignmentOptions.Center, true);
+            var retBtRect = retBtnText.GetComponent<RectTransform>();
+            retBtRect.anchorMin = Vector2.zero; retBtRect.anchorMax = Vector2.one;
+            retBtRect.offsetMin = Vector2.zero; retBtRect.offsetMax = Vector2.zero;
         }
     }
 }

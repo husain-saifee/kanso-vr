@@ -287,9 +287,10 @@ public class vrlook : MonoBehaviour
         endingstate = 1;
         e = 1;
 
-        if (rd != null && !rd.isKinematic)
+        if (rd != null)
         {
             rd.velocity = Vector3.zero;
+            rd.isKinematic = true;
         }
 
         if (Max != null)
@@ -303,19 +304,40 @@ public class vrlook : MonoBehaviour
             rig.SendHapticImpulse(0.3f, 0.1f, UnityEngine.XR.XRNode.RightHand);
         }
 
-        // Show peaceful End Ritual
-        TherapySessionRitual.ShowEndRitual("High Elevation", "Summit Reached • 360m Altitude", () =>
-        {
-            var startVr3 = FindObjectOfType<StartVr3>();
-            if (startVr3 != null)
+        float duration = PatientSessionManager.Instance != null ? PatientSessionManager.Instance.GetCurrentSessionDuration() : 0f;
+        string durationFormatted = PatientSessionManager.Instance != null ? PatientSessionManager.Instance.FormatDuration(duration) : $"{duration:F0}s";
+        string metricsSummary = $"Peak Altitude: {ValChange.HighestHigh:F1}m • Elapsed Time: {durationFormatted}";
+
+        // Show peaceful End Ritual with review data, return to menu, and restart session options
+        TherapySessionRitual.ShowEndRitual(
+            "High Elevation (Acrophobia)",
+            metricsSummary,
+            onReturnToMenu: () =>
             {
-                startVr3.SaveAndReturn();
-            }
-            else
+                var startVr3 = FindObjectOfType<StartVr3>();
+                if (startVr3 != null)
+                {
+                    startVr3.SaveAndReturn();
+                }
+                else
+                {
+                    PatientSessionManager.Instance.EndAndSaveSession(completed: true, extraParams: "Acrophobia Summit 360m Reached");
+                    VRFadeManager.Instance.FadeAndLoadScene(0, 0.5f);
+                }
+            },
+            onRestart: () =>
             {
-                PatientSessionManager.Instance.EndAndSaveSession(completed: true, extraParams: "Acrophobia Summit 360m Reached");
-                VRFadeManager.Instance.FadeAndLoadScene(0, 0.5f);
+                PatientSessionManager.Instance.EndAndSaveSession(completed: true, extraParams: "Acrophobia Restarted by Patient");
+                int currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex;
+                if (VRFadeManager.Instance != null)
+                {
+                    VRFadeManager.Instance.FadeAndLoadScene(currentScene, 0.5f);
+                }
+                else
+                {
+                    UnityEngine.SceneManagement.SceneManager.LoadScene(currentScene);
+                }
             }
-        });
+        );
     }
 }
