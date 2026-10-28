@@ -81,13 +81,22 @@ public class ValChange : MonoBehaviour
             Headwait.SetActive(true);
         }
 
-        // Activate parent canvas and ensure all telemetry labels (Time, Height, etc.) are visible
+        // Activate parent canvas and ensure telemetry labels (Time, Height, etc.) are visible
+        // Strictly exclude any "Max Height Reached" banner from activating on start
         if (Timeobj != null && Timeobj.transform.parent != null)
         {
             Timeobj.transform.parent.gameObject.SetActive(true);
             for (int i = 0; i < Timeobj.transform.parent.childCount; i++)
             {
-                Timeobj.transform.parent.GetChild(i).gameObject.SetActive(true);
+                var child = Timeobj.transform.parent.GetChild(i).gameObject;
+                var tmp = child.GetComponent<TextMeshProUGUI>();
+                if (child.name.IndexOf("max", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    (tmp != null && tmp.text.IndexOf("max", StringComparison.OrdinalIgnoreCase) >= 0))
+                {
+                    child.SetActive(false);
+                    continue;
+                }
+                child.SetActive(true);
             }
         }
     }

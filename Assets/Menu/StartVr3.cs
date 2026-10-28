@@ -4,7 +4,7 @@ using DePhobia.VR;
 
 /// <summary>
 /// Scene lifecycle controller for Acrophobia (High Elevation) simulation.
-/// Spawns the hoverboard in the true geographic center of the city (160, 32, 180),
+/// Spawns the hoverboard in the central avenue canyon at (200, 32, 315) with 11m+ wall clearance,
 /// anchors VRPlayerRig, creates an expansive low-altitude ground cloud/mist deck below,
 /// and dynamically calculates atmospheric altitude fog as the patient ascends.
 /// </summary>
@@ -35,7 +35,7 @@ public class StartVr3 : MonoBehaviour
             if (camCol != null) Destroy(camCol);
         }
 
-        // 3. Position hoverboard directly in the center of the city (160, 32, 180) facing down Broadway canyon
+        // 3. Position hoverboard in the open avenue (298, 32, 86) with clear airspace and wide wall clearance
         if (_lookScript != null)
         {
             _lookScript.transform.position = new Vector3(vrlook.CENTER_SPAWN_X, 32f, vrlook.CENTER_SPAWN_Z);
@@ -47,6 +47,13 @@ public class StartVr3 : MonoBehaviour
                 hoverRb.useGravity = false;
                 hoverRb.isKinematic = true;
                 hoverRb.constraints = RigidbodyConstraints.FreezeAll;
+            }
+
+            // Ensure no colliders on the hoverboard snag or create invisible wall collisions with building geometry
+            var hoverColliders = _lookScript.GetComponentsInChildren<Collider>();
+            foreach (var col in hoverColliders)
+            {
+                col.isTrigger = true;
             }
         }
 

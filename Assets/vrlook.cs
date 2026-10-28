@@ -55,14 +55,14 @@ public class vrlook : MonoBehaviour
     public float focusTimenotfalling = 0.6f;
     public float focusTimefalling = 0.6f;
 
-    public const float CENTER_SPAWN_X = 160.0f;
-    public const float CENTER_SPAWN_Z = 180.0f;
+    public const float CENTER_SPAWN_X = 298.0f;
+    public const float CENTER_SPAWN_Z = 86.0f;
     private const float MIN_HOVERBOARD_Y = 32.0f;
     private const float MAX_HOVERBOARD_Y = 360.0f;
 
     // Desktop pitch/yaw tracking
     private float _cameraPitch = 0f;
-    private float _hoverYaw = 90f;
+    private float _hoverYaw = 45f;
 
     void Start()
     {
@@ -100,7 +100,7 @@ public class vrlook : MonoBehaviour
             vrCamera = Camera.main.transform;
         }
 
-        // Initialize position in the true geographic center of the city (160, 32, 180) surrounded by skyscrapers
+        // Initialize position in open avenue (298, 32, 86) with clear airspace and wide clearance from building walls
         transform.position = new Vector3(CENTER_SPAWN_X, Mathf.Max(transform.position.y, MIN_HOVERBOARD_Y), CENTER_SPAWN_Z);
         transform.rotation = Quaternion.Euler(0f, 45f, 0f);
         _hoverYaw = 45f;
@@ -198,7 +198,24 @@ public class vrlook : MonoBehaviour
 
             if (currentY >= MAX_HOVERBOARD_Y && PatientSessionManager.Instance.GetCurrentSessionDuration() > 20f)
             {
+                if (Max != null)
+                {
+                    Max.SetActive(true);
+                    if (maxheight != null)
+                    {
+                        maxheight.color = ThemeTokens.AccentSage;
+                        maxheight.text = "Summit Reached (360m)";
+                    }
+                }
                 HandleEndingSequence();
+            }
+            else
+            {
+                // Ensure Max height text is strictly hidden before summit is reached
+                if (endingstate == 0 && Max != null && Max.activeSelf)
+                {
+                    Max.SetActive(false);
+                }
             }
         }
     }
