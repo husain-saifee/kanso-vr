@@ -4,20 +4,24 @@ using DePhobia.VR;
 
 /// <summary>
 /// Scene lifecycle controller for Acrophobia (High Elevation) simulation.
-/// Initializes the patient session, anchors VRPlayerRig to the ascending hoverboard,
-/// positions hoverboard safely over the city avenue, and conducts the calming start ritual
-/// under the Forest Mineral & Sage visual language.
+/// Spawns the hoverboard in the true geographic center of the city (160, 32, 180),
+/// anchors VRPlayerRig, creates an expansive low-altitude ground cloud/mist deck below,
+/// and dynamically calculates atmospheric altitude fog as the patient ascends.
 /// </summary>
 public class StartVr3 : MonoBehaviour
 {
     private vrlook _lookScript;
+    private GameObject _groundMistDeck;
 
     private void Start()
     {
         PatientSessionManager.Instance.StartSession("Acrophobia");
 
-        // Enable atmospheric city perspective distance fog (Acrophobia only)
+        // 1. Configure baseline Acrophobia atmospheric distance fog
         EnableAcrophobiaDistanceFog();
+
+        // 2. Generate procedural low-altitude sea-of-clouds ground mist deck covering the street grid below
+        CreateGroundMistDeck();
 
         _lookScript = FindObjectOfType<vrlook>();
         var cam = Camera.main;
@@ -31,11 +35,11 @@ public class StartVr3 : MonoBehaviour
             if (camCol != null) Destroy(camCol);
         }
 
-        // Reposition hoverboard deep into the city center avenue (228, 32, 145) surrounded by 350m skyscrapers
+        // 3. Position hoverboard directly in the center of the city (160, 32, 180) facing down Broadway canyon
         if (_lookScript != null)
         {
-            _lookScript.transform.position = new Vector3(228f, 32f, 145f);
-            _lookScript.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
+            _lookScript.transform.position = new Vector3(vrlook.CENTER_SPAWN_X, 32f, vrlook.CENTER_SPAWN_Z);
+            _lookScript.transform.rotation = Quaternion.Euler(0f, 45f, 0f);
 
             var hoverRb = _lookScript.GetComponent<Rigidbody>();
             if (hoverRb != null)
@@ -46,20 +50,19 @@ public class StartVr3 : MonoBehaviour
             }
         }
 
-        // Ensure VR Rig is properly anchored to the hoverboard
+        // 4. Ensure VR Rig is properly anchored to the hoverboard
         var rig = FindObjectOfType<VRPlayerRig>();
         if (rig == null)
         {
             var rigGo = new GameObject("VRPlayerRig");
             if (_lookScript != null)
             {
-                // Anchor to hoverboard so the patient moves together with elevation
                 rigGo.transform.SetParent(_lookScript.transform, false);
                 rigGo.transform.localPosition = Vector3.zero;
             }
 
             rig = rigGo.AddComponent<VRPlayerRig>();
-            rig.enableLocomotion = false; // Hoverboard governs platform ascension
+            rig.enableLocomotion = false;
             rig.enableGravity = false;
 
             var cc = rig.GetComponent<CharacterController>();
@@ -98,7 +101,7 @@ public class StartVr3 : MonoBehaviour
         // Fade in smoothly from black
         VRFadeManager.Instance.FadeIn(0.6f, () =>
         {
-            // Conduct calm 3-breath start ritual before height mechanics commence
+            // Conduct calm start ritual before height mechanics commence
             TherapySessionRitual.ShowStartRitual("High Elevation", () =>
             {
                 if (_lookScript != null)
@@ -113,6 +116,9 @@ public class StartVr3 : MonoBehaviour
 
     private void Update()
     {
+        // Dynamically update atmospheric fog as hoverboard ascends
+        UpdateAcrophobiaAltitudeFog();
+
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             var pauseMenu = FindObjectOfType<VRInGamePauseMenu>();
@@ -131,9 +137,83 @@ public class StartVr3 : MonoBehaviour
     {
         RenderSettings.fog = true;
         RenderSettings.fogMode = FogMode.Linear;
-        RenderSettings.fogStartDistance = 35f;
-        RenderSettings.fogEndDistance = 260f;
-        RenderSettings.fogColor = new Color(0.62f, 0.66f, 0.64f, 1.0f); // Atmospheric city perspective haze
+        RenderSettings.fogStartDistance = 2f;
+        RenderSettings.fogEndDistance = 85f;
+        RenderSettings.fogColor = new Color(0.72f, 0.76f, 0.79f, 1.0f); // Atmospheric city perspective haze
+    }
+
+    private void UpdateAcrophobiaAltitudeFog()
+    {
+        if (_lookScript == null) return;
+
+        float currentAltitude = _lookScript.transform.position.y;
+        float progress = Mathf.InverseLerp(32f, 360f, currentAltitude);
+
+        RenderSettings.fog = true;
+        RenderSettings.fogMode = FogMode.Linear;
+        // As altitude rises from 32m to 360m:
+        // Fog distance expands smoothly to give panoramic aerial views of skyscraper tops,
+        // while the street floor below (hundreds of meters away) remains completely shrouded in clouds!
+        RenderSettings.fogStartDistance = Mathf.Lerp(2f, 15f, progress);
+        RenderSettings.fogEndDistance = Mathf.Lerp(85f, 160f, progress);
+
+        Color streetHaze = new Color(0.70f, 0.75f, 0.78f, 1.0f);
+        Color skyCloud = new Color(0.84f, 0.88f, 0.91f, 1.0f);
+        RenderSettings.fogColor = Color.Lerp(streetHaze, skyCloud, progress);
+    }
+
+    /// <summary>
+    /// Generates a layered low-altitude sea-of-clouds ground mist deck at Y = 22m.
+    /// When the player ascends into the sky and looks down, the streets below are
+    /// shrouded in a soft, ethereal blanket of clouds, creating an authentic sense of extreme altitude.
+    /// </summary>
+    private void CreateGroundMistDeck()
+    {
+        var existing = GameObject.Find("AcrophobiaGroundMistDeck");
+        if (existing != null) return;
+
+        _groundMistDeck = new GameObject("AcrophobiaGroundMistDeck");
+        _groundMistDeck.transform.position = new Vector3(vrlook.CENTER_SPAWN_X, 22f, vrlook.CENTER_SPAWN_Z);
+
+        // Layer 1: Base ground mist blanket (covers entire city grid: 450m x 450m)
+        var layer1 = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        layer1.name = "GroundCloudLayer_1";
+        layer1.transform.SetParent(_groundMistDeck.transform, false);
+        layer1.transform.localPosition = Vector3.zero;
+        layer1.transform.localScale = new Vector3(45f, 1f, 45f);
+
+        var col1 = layer1.GetComponent<Collider>();
+        if (col1 != null) Destroy(col1);
+
+        var rend1 = layer1.GetComponent<MeshRenderer>();
+        if (rend1 != null)
+        {
+            var mat = new Material(Shader.Find("Sprites/Default"));
+            mat.color = new Color(0.78f, 0.82f, 0.85f, 0.65f); // Soft cloud mist
+            rend1.material = mat;
+            rend1.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            rend1.receiveShadows = false;
+        }
+
+        // Layer 2: Secondary offset mist sheet at Y = 25m for depth perception
+        var layer2 = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        layer2.name = "GroundCloudLayer_2";
+        layer2.transform.SetParent(_groundMistDeck.transform, false);
+        layer2.transform.localPosition = new Vector3(15f, 3f, 15f);
+        layer2.transform.localScale = new Vector3(40f, 1f, 40f);
+
+        var col2 = layer2.GetComponent<Collider>();
+        if (col2 != null) Destroy(col2);
+
+        var rend2 = layer2.GetComponent<MeshRenderer>();
+        if (rend2 != null)
+        {
+            var mat2 = new Material(Shader.Find("Sprites/Default"));
+            mat2.color = new Color(0.82f, 0.86f, 0.89f, 0.45f); // Lighter mist veil
+            rend2.material = mat2;
+            rend2.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            rend2.receiveShadows = false;
+        }
     }
 
     private void OnDestroy()

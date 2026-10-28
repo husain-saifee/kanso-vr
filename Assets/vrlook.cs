@@ -55,6 +55,8 @@ public class vrlook : MonoBehaviour
     public float focusTimenotfalling = 0.6f;
     public float focusTimefalling = 0.6f;
 
+    public const float CENTER_SPAWN_X = 160.0f;
+    public const float CENTER_SPAWN_Z = 180.0f;
     private const float MIN_HOVERBOARD_Y = 32.0f;
     private const float MAX_HOVERBOARD_Y = 360.0f;
 
@@ -98,9 +100,10 @@ public class vrlook : MonoBehaviour
             vrCamera = Camera.main.transform;
         }
 
-        // Initialize position in the heart of the city at (228, 32, 145) facing avenue
-        transform.position = new Vector3(228f, Mathf.Max(transform.position.y, MIN_HOVERBOARD_Y), 145f);
-        transform.rotation = Quaternion.Euler(0f, 90f, 0f);
+        // Initialize position in the true geographic center of the city (160, 32, 180) surrounded by skyscrapers
+        transform.position = new Vector3(CENTER_SPAWN_X, Mathf.Max(transform.position.y, MIN_HOVERBOARD_Y), CENTER_SPAWN_Z);
+        transform.rotation = Quaternion.Euler(0f, 45f, 0f);
+        _hoverYaw = 45f;
 
         ValChange.hf = (int)transform.position.y;
         ValChange.HighestHigh = transform.position.y;
@@ -185,7 +188,7 @@ public class vrlook : MonoBehaviour
 
             // Clamping bounds
             currentY = Mathf.Clamp(currentY, MIN_HOVERBOARD_Y, MAX_HOVERBOARD_Y);
-            transform.position = new Vector3(228f, currentY, 145f);
+            transform.position = new Vector3(CENTER_SPAWN_X, currentY, CENTER_SPAWN_Z);
 
             ValChange.hf = (int)currentY;
             ValChange.HighestHigh = Mathf.Max(ValChange.HighestHigh, currentY);

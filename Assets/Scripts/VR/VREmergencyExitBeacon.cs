@@ -6,16 +6,16 @@ namespace DePhobia.VR
 {
     /// <summary>
     /// In-world emergency exit beacon for patients in distress.
+    /// Strictly click-activated: gazing or looking around NEVER triggers auto-exit.
+    /// Only explicit mouse clicks, controller pointer clicks, or tap actions trigger safe return to menu.
     /// </summary>
     [RequireComponent(typeof(BoxCollider))]
     public class VREmergencyExitBeacon : MonoBehaviour
     {
-        public float gazeTriggerTime = 1.5f;
         public TextMeshPro statusLabel;
         public TextMeshPro subLabel;
 
-        private float _currentGazeTime = 0f;
-        private bool _isGazedAt = false;
+        private bool _isHovered = false;
         private BoxCollider _collider;
 
         private void Awake()
@@ -26,34 +26,25 @@ namespace DePhobia.VR
                 _collider.size = new Vector3(0.8f, 0.6f, 0.2f);
                 _collider.isTrigger = true;
             }
-
         }
 
         private void Update()
         {
-            if (_isGazedAt)
+            if (_isHovered)
             {
-                _currentGazeTime += Time.deltaTime;
-                float remaining = Mathf.Max(0, gazeTriggerTime - _currentGazeTime);
-
                 if (statusLabel != null)
                 {
-                    statusLabel.text = "Returning to Menu...";
+                    statusLabel.text = "Return to Menu";
                     statusLabel.color = ThemeTokens.GentleExitClay;
                 }
                 if (subLabel != null)
                 {
-                    subLabel.text = $"Holding gaze... ({remaining:F1}s)";
-                }
-
-                if (_currentGazeTime >= gazeTriggerTime)
-                {
-                    TriggerEmergencyExit();
+                    subLabel.text = "Click to exit session";
+                    subLabel.color = ThemeTokens.TextPrimary;
                 }
             }
             else
             {
-                _currentGazeTime = 0f;
                 if (statusLabel != null)
                 {
                     statusLabel.text = "Return to Menu";
@@ -61,7 +52,7 @@ namespace DePhobia.VR
                 }
                 if (subLabel != null)
                 {
-                    subLabel.text = "Hold gaze or tap to exit safely";
+                    subLabel.text = "Click to exit safely";
                     subLabel.color = ThemeTokens.TextSecondary;
                 }
             }
@@ -69,17 +60,27 @@ namespace DePhobia.VR
 
         public void OnPointerEnter()
         {
-            _isGazedAt = true;
+            _isHovered = true;
         }
 
         public void OnPointerExit()
         {
-            _isGazedAt = false;
+            _isHovered = false;
+        }
+
+        public void OnPointerClick()
+        {
+            TriggerEmergencyExit();
+        }
+
+        private void OnMouseDown()
+        {
+            TriggerEmergencyExit();
         }
 
         public void TriggerEmergencyExit()
         {
-            _isGazedAt = false;
+            _isHovered = false;
 
             var rig = FindObjectOfType<VRPlayerRig>();
             if (rig != null)
@@ -87,13 +88,8 @@ namespace DePhobia.VR
                 rig.SendHapticImpulse(0.35f, 0.12f, UnityEngine.XR.XRNode.RightHand);
             }
 
-            PatientSessionManager.Instance.EndAndSaveSession(completed: false, extraParams: "User Safe Exit via Beacon");
+            PatientSessionManager.Instance.EndAndSaveSession(completed: false, extraParams: "User Safe Exit via Beacon Click");
             VRFadeManager.Instance.FadeAndLoadScene(0, 0.5f);
-        }
-
-        private void OnMouseDown()
-        {
-            TriggerEmergencyExit();
         }
 
         public static VREmergencyExitBeacon EnsureBeaconInScene(Transform parentTransform = null, Vector3? localOffset = null)
@@ -110,76 +106,57 @@ namespace DePhobia.VR
             }
             else
             {
-                Camera cam = Camera.main;
-                if (cam != null)
-                {
-                    Vector3 forward = cam.transform.forward; forward.y = 0; forward.Normalize();
-                    Vector3 right = cam.transform.right; right.y = 0; right.Normalize();
-                    beaconObj.transform.position = cam.transform.position + (forward * 1.8f) - (right * 1.2f) + Vector3.up * 0.1f;
-                    beaconObj.transform.rotation = Quaternion.LookRotation(cam.transform.position - beaconObj.transform.position);
-                }
-                else
-                {
-                    beaconObj.transform.position = new Vector3(-1.2f, 1.4f, 1.8f);
-                    beaconObj.transform.rotation = Quaternion.Euler(0, 20f, 0);
-                }
+                beaconObj.transform.position = localOffset ?? new Vector3(-1.2f, 1.4f, 2.0f);
+                beaconObj.transform.rotation = Quaternion.identity;
             }
 
             var beacon = beaconObj.AddComponent<VREmergencyExitBeacon>();
+            beacon.BuildBeaconVisuals();
+            return beacon;
+        }
 
-            // Visual background card (Forest Mineral & Sage styling)
-            var cardGo = new GameObject("BeaconPlate");
-            cardGo.transform.SetParent(beaconObj.transform, false);
-            cardGo.transform.localScale = new Vector3(0.85f, 0.45f, 1f);
+        private void BuildBeaconVisuals()
+        {
+            var bgObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            bgObj.name = "BeaconBackground";
+            bgObj.transform.SetParent(transform, false);
+            bgObj.transform.localPosition = Vector3.zero;
+            bgObj.transform.localScale = new Vector3(0.72f, 0.44f, 0.04f);
 
-            var mf = cardGo.AddComponent<MeshFilter>();
-            var quadMesh = new Mesh();
-            quadMesh.name = "BeaconPlateMesh";
-            quadMesh.vertices = new Vector3[]
+            var bgCol = bgObj.GetComponent<Collider>();
+            if (bgCol != null) Destroy(bgCol);
+
+            var bgRenderer = bgObj.GetComponent<MeshRenderer>();
+            if (bgRenderer != null)
             {
-                new Vector3(-0.5f, -0.5f, 0),
-                new Vector3(0.5f, -0.5f, 0),
-                new Vector3(-0.5f, 0.5f, 0),
-                new Vector3(0.5f, 0.5f, 0)
-            };
-            quadMesh.uv = new Vector2[]
-            {
-                new Vector2(0, 0),
-                new Vector2(1, 0),
-                new Vector2(0, 1),
-                new Vector2(1, 1)
-            };
-            quadMesh.triangles = new int[] { 0, 2, 1, 2, 3, 1 };
-            quadMesh.RecalculateNormals();
-            mf.sharedMesh = quadMesh;
+                var bgMat = new Material(Shader.Find("Sprites/Default"));
+                bgMat.color = ThemeTokens.SurfacePanel;
+                bgRenderer.material = bgMat;
+            }
 
-            var renderer = cardGo.AddComponent<MeshRenderer>();
-            var mat = new Material(Shader.Find("Standard") ?? Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Diffuse") ?? Shader.Find("Unlit/Color"));
-            mat.color = ThemeTokens.SurfacePanel;
-            renderer.material = mat;
-
-            // Text Labels
             var labelObj = new GameObject("StatusLabel");
-            labelObj.transform.SetParent(beaconObj.transform, false);
-            labelObj.transform.localPosition = new Vector3(0, 0.08f, -0.02f);
-            var statusTmp = labelObj.AddComponent<TextMeshPro>();
-            statusTmp.text = "Return to Menu";
-            statusTmp.fontSize = 2.4f;
-            statusTmp.alignment = TextAlignmentOptions.Center;
-            statusTmp.color = ThemeTokens.TextPrimary;
-            beacon.statusLabel = statusTmp;
+            labelObj.transform.SetParent(transform, false);
+            labelObj.transform.localPosition = new Vector3(0, 0.08f, -0.025f);
+            statusLabel = labelObj.AddComponent<TextMeshPro>();
+            statusLabel.text = "Return to Menu";
+            statusLabel.fontSize = 2.4f;
+            statusLabel.alignment = TextAlignmentOptions.Center;
+            statusLabel.color = ThemeTokens.TextPrimary;
+            if (ThemeTokens.ModernFont != null) statusLabel.font = ThemeTokens.ModernFont;
+            var labelRect = labelObj.GetComponent<RectTransform>();
+            if (labelRect != null) labelRect.sizeDelta = new Vector2(0.68f, 0.2f);
 
             var subObj = new GameObject("SubLabel");
-            subObj.transform.SetParent(beaconObj.transform, false);
-            subObj.transform.localPosition = new Vector3(0, -0.09f, -0.02f);
-            var subTmp = subObj.AddComponent<TextMeshPro>();
-            subTmp.text = "Hold gaze or tap to exit safely";
-            subTmp.fontSize = 1.4f;
-            subTmp.alignment = TextAlignmentOptions.Center;
-            subTmp.color = ThemeTokens.TextSecondary;
-            beacon.subLabel = subTmp;
-
-            return beacon;
+            subObj.transform.SetParent(transform, false);
+            subObj.transform.localPosition = new Vector3(0, -0.08f, -0.025f);
+            subLabel = subObj.AddComponent<TextMeshPro>();
+            subLabel.text = "Click to exit safely";
+            subLabel.fontSize = 1.3f;
+            subLabel.alignment = TextAlignmentOptions.Center;
+            subLabel.color = ThemeTokens.TextSecondary;
+            if (ThemeTokens.ModernFont != null) subLabel.font = ThemeTokens.ModernFont;
+            var subRect = subObj.GetComponent<RectTransform>();
+            if (subRect != null) subRect.sizeDelta = new Vector2(0.68f, 0.16f);
         }
     }
 }
