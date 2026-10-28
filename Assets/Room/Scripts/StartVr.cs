@@ -74,11 +74,50 @@ public class StartVr : MonoBehaviour
             }
         }
 
-        // Disable legacy VRLookWalk if present to prevent duplicate CharacterControllers
+        // Disable legacy VRLookWalk and any duplicate CharacterControllers/Rigidbodies
         var lookWalk = FindObjectOfType<VRLookWalk>();
-        if (lookWalk != null)
+        if (lookWalk != null) lookWalk.enabled = false;
+
+        var oldCc = GetComponent<CharacterController>();
+        if (oldCc != null)
         {
-            lookWalk.enabled = false;
+            oldCc.enabled = false;
+            Destroy(oldCc);
+        }
+
+        var oldRb = GetComponent<Rigidbody>();
+        if (oldRb != null)
+        {
+            oldRb.isKinematic = true;
+            oldRb.useGravity = false;
+        }
+
+        // Clean Camera.main of any conflicting colliders, rigidbodies, or legacy wall scripts
+        var cam = Camera.main;
+        if (cam != null)
+        {
+            var camCols = cam.GetComponentsInChildren<Collider>();
+            foreach (var col in camCols) Destroy(col);
+
+            var camRb = cam.GetComponent<Rigidbody>();
+            if (camRb != null) Destroy(camRb);
+
+            var camNeg = cam.GetComponent<xnegmove>();
+            if (camNeg != null) Destroy(camNeg);
+
+            var camPos = cam.GetComponent<xposmove>();
+            if (camPos != null) Destroy(camPos);
+        }
+
+        // Remove rogue paper-thin BoxColliders (size.y < 0.0001f) floating in the room
+        var allBoxes = FindObjectsOfType<BoxCollider>();
+        foreach (var box in allBoxes)
+        {
+            if (box.size.y < 0.0001f || box.size.x < 0.0001f || box.size.z < 0.0001f)
+            {
+                box.enabled = false;
+                Destroy(box);
+            }
         }
 
         // Ensure VR Rig exists at the player's origin
@@ -90,11 +129,21 @@ public class StartVr : MonoBehaviour
             rigGo.transform.rotation = transform.rotation;
 
             rig = rigGo.AddComponent<VRPlayerRig>();
-            var cam = Camera.main;
             if (cam != null)
             {
                 cam.transform.SetParent(rigGo.transform, false);
                 rig.headCamera = cam.transform;
+            }
+        }
+
+        // Eliminate any other duplicate CharacterControllers not belonging to VRPlayerRig
+        var allCcs = FindObjectsOfType<CharacterController>();
+        foreach (var cc in allCcs)
+        {
+            if (cc.GetComponent<VRPlayerRig>() == null)
+            {
+                cc.enabled = false;
+                Destroy(cc);
             }
         }
 

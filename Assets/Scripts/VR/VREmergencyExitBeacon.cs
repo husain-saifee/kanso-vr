@@ -26,7 +26,7 @@ namespace DePhobia.VR
             if (_collider != null)
             {
                 _collider.size = new Vector3(0.65f, 0.22f, 0.05f);
-                _collider.isTrigger = false;
+                _collider.isTrigger = true;
             }
         }
 

@@ -61,6 +61,11 @@ public class StartVr2 : MonoBehaviour
             var cam = Camera.main;
             if (cam != null)
             {
+                var camCols = cam.GetComponentsInChildren<Collider>();
+                foreach (var col in camCols) Destroy(col);
+                var camRb = cam.GetComponent<Rigidbody>();
+                if (camRb != null) Destroy(camRb);
+
                 cam.transform.SetParent(rigGo.transform, false);
                 cam.transform.localPosition = new Vector3(0, 1.6f, 0);
                 rig.headCamera = cam.transform;
