@@ -340,19 +340,27 @@ public class mainmenu : MonoBehaviour
 
     private void CreateFooterLink(Transform parent, string name, string label, Vector2 pos, UnityEngine.Events.UnityAction action, Color? textColor = null)
     {
-        var go = new GameObject(name);
+        var go = new GameObject(name, typeof(RectTransform));
         go.transform.SetParent(parent, false);
 
+        var img = go.AddComponent<Image>();
+        img.color = Color.clear;
+
         var btn = go.AddComponent<Button>();
+        btn.targetGraphic = img;
         btn.onClick.AddListener(() =>
         {
-            TherapyAudioManager.Instance.PlayFeedbackClick();
+            if (TherapyAudioManager.HasInstance && TherapyAudioManager.Instance != null)
+                TherapyAudioManager.Instance.PlayFeedbackClick();
             action?.Invoke();
         });
 
         var text = ThemeTokens.CreateLabel(go.transform, "Text", label, 13, textColor ?? ThemeTokens.TextSecondary, TextAlignmentOptions.Center);
         var tRect = text.GetComponent<RectTransform>();
-        tRect.sizeDelta = new Vector2(140, 30);
+        tRect.anchorMin = Vector2.zero;
+        tRect.anchorMax = Vector2.one;
+        tRect.offsetMin = Vector2.zero;
+        tRect.offsetMax = Vector2.zero;
 
         var rect = go.GetComponent<RectTransform>();
         rect.anchoredPosition = pos;
@@ -602,19 +610,27 @@ public class mainmenu : MonoBehaviour
 
     private Button CreateBackButton(Transform parent, UnityEngine.Events.UnityAction action)
     {
-        var backObj = new GameObject("BackButton");
+        var backObj = new GameObject("BackButton", typeof(RectTransform));
         backObj.transform.SetParent(parent, false);
 
+        var img = backObj.AddComponent<Image>();
+        img.color = Color.clear;
+
         var btn = backObj.AddComponent<Button>();
+        btn.targetGraphic = img;
         btn.onClick.AddListener(() =>
         {
-            TherapyAudioManager.Instance.PlayFeedbackClick();
+            if (TherapyAudioManager.HasInstance && TherapyAudioManager.Instance != null)
+                TherapyAudioManager.Instance.PlayFeedbackClick();
             action?.Invoke();
         });
 
         var text = ThemeTokens.CreateLabel(backObj.transform, "Text", "← Back to Sessions", 13, ThemeTokens.AccentSage, TextAlignmentOptions.Left, true);
         var tRect = text.GetComponent<RectTransform>();
-        tRect.sizeDelta = new Vector2(160, 30);
+        tRect.anchorMin = Vector2.zero;
+        tRect.anchorMax = Vector2.one;
+        tRect.offsetMin = Vector2.zero;
+        tRect.offsetMax = Vector2.zero;
 
         var rect = backObj.GetComponent<RectTransform>();
         rect.anchoredPosition = new Vector2(-220, 215);

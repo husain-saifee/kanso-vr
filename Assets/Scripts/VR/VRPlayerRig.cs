@@ -78,7 +78,7 @@ namespace DePhobia.VR
 
         private void OnDisable()
         {
-            if (TherapySettingsManager.Instance != null)
+            if (TherapySettingsManager.HasInstance && TherapySettingsManager.Instance != null)
             {
                 TherapySettingsManager.Instance.OnSettingsChanged -= LoadComfortPreferences;
             }

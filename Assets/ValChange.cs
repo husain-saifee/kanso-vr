@@ -5,8 +5,8 @@ using DePhobia.Core;
 
 /// <summary>
 /// Manages real-time altitude, timer, and therapy metrics in Acrophobia.
-/// Hides floating telemetry numbers during active exposure to ensure zero visual clutter,
-/// while continuing to compute and log session telemetry for patient history.
+/// Displays clear, readable on-screen elevation and elapsed session time
+/// styled cleanly with ThemeTokens.
 /// </summary>
 public class ValChange : MonoBehaviour
 {
@@ -29,7 +29,7 @@ public class ValChange : MonoBehaviour
     private TextMeshProUGUI focun;
 
     public static string s1 = "0 sec";
-    private string s2 = "0";
+    private string s2 = "0 m";
     private string s3 = "0";
     private string s4 = "0";
     private int condition = 3;
@@ -37,12 +37,6 @@ public class ValChange : MonoBehaviour
     void Start()
     {
         HighestHigh = 0;
-        // Deactivate floating in-world HUD telemetry elements to preserve a quiet, designed visual field
-        if (Timeobj != null) { timee = Timeobj.GetComponent<TextMeshProUGUI>(); Timeobj.SetActive(false); }
-        if (Heigh != null) { heig = Heigh.GetComponent<TextMeshProUGUI>(); Heigh.SetActive(false); }
-        if (focusnf != null) { focun = focusnf.GetComponent<TextMeshProUGUI>(); focusnf.SetActive(false); }
-        if (waitstill != null) { waisti = waitstill.GetComponent<TextMeshProUGUI>(); waitstill.SetActive(false); }
-        if (Headwait != null) { headait = Headwait.GetComponent<TextMeshProUGUI>(); Headwait.SetActive(false); }
 
         if (cam == null && Camera.main != null)
         {
@@ -53,24 +47,66 @@ public class ValChange : MonoBehaviour
         {
             hi = (int)cam.transform.position.y;
         }
+
+        // Ensure HUD telemetry Canvas and elements are fully active and legible
+        if (Timeobj != null)
+        {
+            timee = Timeobj.GetComponent<TextMeshProUGUI>();
+            Timeobj.SetActive(true);
+            if (timee != null) timee.color = ThemeTokens.TextPrimary;
+        }
+
+        if (Heigh != null)
+        {
+            heig = Heigh.GetComponent<TextMeshProUGUI>();
+            Heigh.SetActive(true);
+            if (heig != null) heig.color = ThemeTokens.AccentSage;
+        }
+
+        if (focusnf != null)
+        {
+            focun = focusnf.GetComponent<TextMeshProUGUI>();
+            focusnf.SetActive(true);
+        }
+
+        if (waitstill != null)
+        {
+            waisti = waitstill.GetComponent<TextMeshProUGUI>();
+            waitstill.SetActive(true);
+        }
+
+        if (Headwait != null)
+        {
+            headait = Headwait.GetComponent<TextMeshProUGUI>();
+            Headwait.SetActive(true);
+        }
+
+        // Activate parent canvas and ensure all telemetry labels (Time, Height, etc.) are visible
+        if (Timeobj != null && Timeobj.transform.parent != null)
+        {
+            Timeobj.transform.parent.gameObject.SetActive(true);
+            for (int i = 0; i < Timeobj.transform.parent.childCount; i++)
+            {
+                Timeobj.transform.parent.GetChild(i).gameObject.SetActive(true);
+            }
+        }
     }
 
     void Update()
     {
-        // Telemetry calculations continue to run for session metrics and kinematic thresholds
         if (vrlook.e != 1) FormatTime();
-        if (timee != null && timee.gameObject.activeSelf) timee.text = s1;
+        if (timee != null) timee.text = s1;
 
         CalculateHeight();
-        if (heig != null && heig.gameObject.activeSelf) heig.text = s2;
+        if (heig != null) heig.text = s2;
 
         CalculateWaitTime();
-        if (waisti != null && waisti.gameObject.activeSelf) waisti.text = s3;
+        if (waisti != null) waisti.text = s3;
 
         UpdateColors();
 
         CalculateFocusTime();
-        if (focun != null && focun.gameObject.activeSelf) focun.text = s4;
+        if (focun != null) focun.text = s4;
     }
 
     private void FormatTime()
@@ -90,10 +126,15 @@ public class ValChange : MonoBehaviour
 
     private void CalculateHeight()
     {
-        if (cam == null) return;
+        if (cam == null)
+        {
+            if (Camera.main != null) cam = Camera.main.gameObject;
+            else return;
+        }
 
         hf = (int)Math.Ceiling(cam.transform.position.y - hi) - 1;
-        s2 = hf.ToString();
+        if (hf < 0) hf = 0;
+        s2 = $"{hf} m";
         if (hf > HighestHigh)
         {
             HighestHigh = hf;
@@ -123,7 +164,6 @@ public class ValChange : MonoBehaviour
 
     private void UpdateColors()
     {
-        // Forest Mineral & Sage: zero red or yellow warning states
         Color targetColor = condition switch
         {
             1 => ThemeTokens.TextMuted,

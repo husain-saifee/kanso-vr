@@ -31,17 +31,38 @@ namespace DePhobia.Core
     public class PatientSessionManager : MonoBehaviour
     {
         private static PatientSessionManager _instance;
+        private static bool _isApplicationQuitting = false;
+        public static bool HasInstance => _instance != null;
+
         public static PatientSessionManager Instance
         {
             get
             {
+                if (_isApplicationQuitting) return null;
                 if (_instance == null)
                 {
-                    var go = new GameObject("PatientSessionManager");
-                    _instance = go.AddComponent<PatientSessionManager>();
-                    DontDestroyOnLoad(go);
+                    _instance = FindObjectOfType<PatientSessionManager>();
+                    if (_instance == null && !_isApplicationQuitting)
+                    {
+                        var go = new GameObject("PatientSessionManager");
+                        _instance = go.AddComponent<PatientSessionManager>();
+                        DontDestroyOnLoad(go);
+                    }
                 }
                 return _instance;
+            }
+        }
+
+        private void OnApplicationQuit()
+        {
+            _isApplicationQuitting = true;
+        }
+
+        private void OnDestroy()
+        {
+            if (_instance == this)
+            {
+                _isApplicationQuitting = true;
             }
         }
 

@@ -14,17 +14,38 @@ namespace DePhobia.VR
     public class VRFadeManager : MonoBehaviour
     {
         private static VRFadeManager _instance;
+        private static bool _isApplicationQuitting = false;
+        public static bool HasInstance => _instance != null;
+
         public static VRFadeManager Instance
         {
             get
             {
+                if (_isApplicationQuitting) return null;
                 if (_instance == null)
                 {
-                    var go = new GameObject("VRFadeManager");
-                    _instance = go.AddComponent<VRFadeManager>();
-                    DontDestroyOnLoad(go);
+                    _instance = FindObjectOfType<VRFadeManager>();
+                    if (_instance == null && !_isApplicationQuitting)
+                    {
+                        var go = new GameObject("VRFadeManager");
+                        _instance = go.AddComponent<VRFadeManager>();
+                        DontDestroyOnLoad(go);
+                    }
                 }
                 return _instance;
+            }
+        }
+
+        private void OnApplicationQuit()
+        {
+            _isApplicationQuitting = true;
+        }
+
+        private void OnDestroy()
+        {
+            if (_instance == this)
+            {
+                _isApplicationQuitting = true;
             }
         }
 

@@ -11,17 +11,37 @@ namespace DePhobia.Core
     public class TherapySettingsManager : MonoBehaviour
     {
         private static TherapySettingsManager _instance;
+        private static bool _isApplicationQuitting = false;
+        public static bool HasInstance => _instance != null;
         public static TherapySettingsManager Instance
         {
             get
             {
+                if (_isApplicationQuitting) return null;
                 if (_instance == null)
                 {
-                    var go = new GameObject("TherapySettingsManager");
-                    _instance = go.AddComponent<TherapySettingsManager>();
-                    DontDestroyOnLoad(go);
+                    _instance = FindObjectOfType<TherapySettingsManager>();
+                    if (_instance == null && !_isApplicationQuitting)
+                    {
+                        var go = new GameObject("TherapySettingsManager");
+                        _instance = go.AddComponent<TherapySettingsManager>();
+                        DontDestroyOnLoad(go);
+                    }
                 }
                 return _instance;
+            }
+        }
+
+        private void OnApplicationQuit()
+        {
+            _isApplicationQuitting = true;
+        }
+
+        private void OnDestroy()
+        {
+            if (_instance == this)
+            {
+                _isApplicationQuitting = true;
             }
         }
 

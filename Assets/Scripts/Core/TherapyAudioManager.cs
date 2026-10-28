@@ -13,17 +13,42 @@ namespace DePhobia.Core
     public class TherapyAudioManager : MonoBehaviour
     {
         private static TherapyAudioManager _instance;
+        private static bool _isApplicationQuitting = false;
+        public static bool HasInstance => _instance != null;
+
         public static TherapyAudioManager Instance
         {
             get
             {
+                if (_isApplicationQuitting) return null;
                 if (_instance == null)
                 {
-                    var go = new GameObject("TherapyAudioManager");
-                    _instance = go.AddComponent<TherapyAudioManager>();
-                    DontDestroyOnLoad(go);
+                    _instance = FindObjectOfType<TherapyAudioManager>();
+                    if (_instance == null && !_isApplicationQuitting)
+                    {
+                        var go = new GameObject("TherapyAudioManager");
+                        _instance = go.AddComponent<TherapyAudioManager>();
+                        DontDestroyOnLoad(go);
+                    }
                 }
                 return _instance;
+            }
+        }
+
+        private void OnApplicationQuit()
+        {
+            _isApplicationQuitting = true;
+        }
+
+        private void OnDestroy()
+        {
+            if (_instance == this)
+            {
+                _isApplicationQuitting = true;
+            }
+            if (TherapySettingsManager.HasInstance && TherapySettingsManager.Instance != null)
+            {
+                TherapySettingsManager.Instance.OnSettingsChanged -= ApplyVolumes;
             }
         }
 

@@ -137,9 +137,9 @@ public class StartVr3 : MonoBehaviour
     {
         RenderSettings.fog = true;
         RenderSettings.fogMode = FogMode.Linear;
-        RenderSettings.fogStartDistance = 2f;
-        RenderSettings.fogEndDistance = 85f;
-        RenderSettings.fogColor = new Color(0.72f, 0.76f, 0.79f, 1.0f); // Atmospheric city perspective haze
+        RenderSettings.fogStartDistance = 60f;
+        RenderSettings.fogEndDistance = 350f;
+        RenderSettings.fogColor = new Color(0.76f, 0.80f, 0.83f, 1.0f); // Soft atmospheric perspective haze
     }
 
     private void UpdateAcrophobiaAltitudeFog()
@@ -152,20 +152,20 @@ public class StartVr3 : MonoBehaviour
         RenderSettings.fog = true;
         RenderSettings.fogMode = FogMode.Linear;
         // As altitude rises from 32m to 360m:
-        // Fog distance expands smoothly to give panoramic aerial views of skyscraper tops,
-        // while the street floor below (hundreds of meters away) remains completely shrouded in clouds!
-        RenderSettings.fogStartDistance = Mathf.Lerp(2f, 15f, progress);
-        RenderSettings.fogEndDistance = Mathf.Lerp(85f, 160f, progress);
+        // Fog distance expands generously so surrounding skyscrapers remain clear and striking,
+        // while the distant horizon softly blends into atmospheric skyline haze
+        RenderSettings.fogStartDistance = Mathf.Lerp(60f, 120f, progress);
+        RenderSettings.fogEndDistance = Mathf.Lerp(350f, 550f, progress);
 
-        Color streetHaze = new Color(0.70f, 0.75f, 0.78f, 1.0f);
-        Color skyCloud = new Color(0.84f, 0.88f, 0.91f, 1.0f);
+        Color streetHaze = new Color(0.75f, 0.79f, 0.82f, 1.0f);
+        Color skyCloud = new Color(0.85f, 0.89f, 0.92f, 1.0f);
         RenderSettings.fogColor = Color.Lerp(streetHaze, skyCloud, progress);
     }
 
     /// <summary>
-    /// Generates a layered low-altitude sea-of-clouds ground mist deck at Y = 22m.
-    /// When the player ascends into the sky and looks down, the streets below are
-    /// shrouded in a soft, ethereal blanket of clouds, creating an authentic sense of extreme altitude.
+    /// Generates a gentle low-altitude cloud mist sheet resting down near street level (Y = 17.5m).
+    /// When looking down from height, streets below are softly shrouded without obstructing
+    /// surrounding skyscrapers or nearby architecture.
     /// </summary>
     private void CreateGroundMistDeck()
     {
@@ -173,9 +173,9 @@ public class StartVr3 : MonoBehaviour
         if (existing != null) return;
 
         _groundMistDeck = new GameObject("AcrophobiaGroundMistDeck");
-        _groundMistDeck.transform.position = new Vector3(vrlook.CENTER_SPAWN_X, 22f, vrlook.CENTER_SPAWN_Z);
+        _groundMistDeck.transform.position = new Vector3(vrlook.CENTER_SPAWN_X, 17.5f, vrlook.CENTER_SPAWN_Z);
 
-        // Layer 1: Base ground mist blanket (covers entire city grid: 450m x 450m)
+        // Soft, ethereal ground cloud blanket resting right above street floor
         var layer1 = GameObject.CreatePrimitive(PrimitiveType.Plane);
         layer1.name = "GroundCloudLayer_1";
         layer1.transform.SetParent(_groundMistDeck.transform, false);
@@ -189,30 +189,10 @@ public class StartVr3 : MonoBehaviour
         if (rend1 != null)
         {
             var mat = new Material(Shader.Find("Sprites/Default"));
-            mat.color = new Color(0.78f, 0.82f, 0.85f, 0.65f); // Soft cloud mist
+            mat.color = new Color(0.82f, 0.86f, 0.90f, 0.20f); // Light, ethereal ground mist
             rend1.material = mat;
             rend1.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             rend1.receiveShadows = false;
-        }
-
-        // Layer 2: Secondary offset mist sheet at Y = 25m for depth perception
-        var layer2 = GameObject.CreatePrimitive(PrimitiveType.Plane);
-        layer2.name = "GroundCloudLayer_2";
-        layer2.transform.SetParent(_groundMistDeck.transform, false);
-        layer2.transform.localPosition = new Vector3(15f, 3f, 15f);
-        layer2.transform.localScale = new Vector3(40f, 1f, 40f);
-
-        var col2 = layer2.GetComponent<Collider>();
-        if (col2 != null) Destroy(col2);
-
-        var rend2 = layer2.GetComponent<MeshRenderer>();
-        if (rend2 != null)
-        {
-            var mat2 = new Material(Shader.Find("Sprites/Default"));
-            mat2.color = new Color(0.82f, 0.86f, 0.89f, 0.45f); // Lighter mist veil
-            rend2.material = mat2;
-            rend2.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            rend2.receiveShadows = false;
         }
     }
 
