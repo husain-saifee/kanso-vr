@@ -17,6 +17,9 @@ public class StartVr2 : MonoBehaviour
     {
         PatientSessionManager.Instance.StartSession("Aquaphobia");
 
+        // Enable atmospheric coastal distance fog (Aquaphobia only)
+        EnableAquaphobiaDistanceFog();
+
         _waterScript = FindObjectOfType<MoreHeight1>();
         if (_waterScript != null) _waterScript.enabled = false;
 
@@ -123,8 +126,23 @@ public class StartVr2 : MonoBehaviour
         }
     }
 
+    private void EnableAquaphobiaDistanceFog()
+    {
+        RenderSettings.fog = true;
+        RenderSettings.fogMode = FogMode.Linear;
+        RenderSettings.fogStartDistance = 15f;
+        RenderSettings.fogEndDistance = 120f;
+        RenderSettings.fogColor = new Color(0.68f, 0.74f, 0.72f, 1.0f); // Calming coastal sea-mist
+    }
+
+    private void OnDestroy()
+    {
+        RenderSettings.fog = false;
+    }
+
     public void SaveAndReturn(bool completed = false)
     {
+        RenderSettings.fog = false;
         string summary = $"WaterSpeed: {TherapySettingsManager.Instance.aquaWaterSpeed:F3}, WaterRiseAfter: {TherapySettingsManager.Instance.aquaRiseAfter:F1}s";
         PatientSessionManager.Instance.EndAndSaveSession(completed: completed, extraParams: summary);
         VRFadeManager.Instance.FadeAndLoadScene(0, 0.5f);

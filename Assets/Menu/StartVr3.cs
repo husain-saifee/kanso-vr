@@ -16,6 +16,9 @@ public class StartVr3 : MonoBehaviour
     {
         PatientSessionManager.Instance.StartSession("Acrophobia");
 
+        // Enable atmospheric city perspective distance fog (Acrophobia only)
+        EnableAcrophobiaDistanceFog();
+
         _lookScript = FindObjectOfType<vrlook>();
         var cam = Camera.main;
 
@@ -126,8 +129,23 @@ public class StartVr3 : MonoBehaviour
         }
     }
 
+    private void EnableAcrophobiaDistanceFog()
+    {
+        RenderSettings.fog = true;
+        RenderSettings.fogMode = FogMode.Linear;
+        RenderSettings.fogStartDistance = 35f;
+        RenderSettings.fogEndDistance = 260f;
+        RenderSettings.fogColor = new Color(0.62f, 0.66f, 0.64f, 1.0f); // Atmospheric city perspective haze
+    }
+
+    private void OnDestroy()
+    {
+        RenderSettings.fog = false;
+    }
+
     public void SaveAndReturn()
     {
+        RenderSettings.fog = false;
         bool completed = (vrlook.e == 1);
         string summary = $"WaitTime: {TherapySettingsManager.Instance.acroWaitTime:F1}s, FocusTime: {TherapySettingsManager.Instance.acroStillFocusTime:F1}s, PeakAltitude: {ValChange.HighestHigh:F1}m";
 

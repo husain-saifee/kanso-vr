@@ -57,6 +57,9 @@ public class mainmenu : MonoBehaviour
 
     private void Start()
     {
+        // Fog is disabled in Main Menu (only active in Aquaphobia and Acrophobia)
+        RenderSettings.fog = false;
+
         // 1. Decommission legacy submenus and privacy violations
         DecommissionLegacyMenus();
 

@@ -16,6 +16,9 @@ public class StartVr : MonoBehaviour
 
     private void Start()
     {
+        // Fog is disabled in Claustrophobia (indoor room remains clear and enclosed)
+        RenderSettings.fog = false;
+
         // Enforce that walls never move before the start ritual finishes
         xposmove.sessionStarted = false;
         xnegmove.sessionStarted = false;
