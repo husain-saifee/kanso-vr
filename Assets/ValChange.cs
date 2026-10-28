@@ -1,10 +1,12 @@
 using System;
 using UnityEngine;
 using TMPro;
+using DePhobia.Core;
 
 /// <summary>
-/// Manages real-time altitude, timer, and therapy condition HUD in Acrophobia.
-/// Optimized to cache components and eliminate null-reference paths.
+/// Manages real-time altitude, timer, and therapy metrics in Acrophobia.
+/// Hides floating telemetry numbers during active exposure to ensure zero visual clutter,
+/// while continuing to compute and log session telemetry for patient history.
 /// </summary>
 public class ValChange : MonoBehaviour
 {
@@ -34,11 +36,12 @@ public class ValChange : MonoBehaviour
 
     void Start()
     {
-        if (Timeobj != null) timee = Timeobj.GetComponent<TextMeshProUGUI>();
-        if (Heigh != null) heig = Heigh.GetComponent<TextMeshProUGUI>();
-        if (focusnf != null) focun = focusnf.GetComponent<TextMeshProUGUI>();
-        if (waitstill != null) waisti = waitstill.GetComponent<TextMeshProUGUI>();
-        if (Headwait != null) headait = Headwait.GetComponent<TextMeshProUGUI>();
+        // Deactivate floating in-world HUD telemetry elements to preserve a quiet, designed visual field
+        if (Timeobj != null) { timee = Timeobj.GetComponent<TextMeshProUGUI>(); Timeobj.SetActive(false); }
+        if (Heigh != null) { heig = Heigh.GetComponent<TextMeshProUGUI>(); Heigh.SetActive(false); }
+        if (focusnf != null) { focun = focusnf.GetComponent<TextMeshProUGUI>(); focusnf.SetActive(false); }
+        if (waitstill != null) { waisti = waitstill.GetComponent<TextMeshProUGUI>(); waitstill.SetActive(false); }
+        if (Headwait != null) { headait = Headwait.GetComponent<TextMeshProUGUI>(); Headwait.SetActive(false); }
 
         if (cam == null && Camera.main != null)
         {
@@ -53,19 +56,20 @@ public class ValChange : MonoBehaviour
 
     void Update()
     {
+        // Telemetry calculations continue to run for session metrics and kinematic thresholds
         if (vrlook.e != 1) FormatTime();
-        if (timee != null) timee.text = s1;
+        if (timee != null && timee.gameObject.activeSelf) timee.text = s1;
 
         CalculateHeight();
-        if (heig != null) heig.text = s2;
+        if (heig != null && heig.gameObject.activeSelf) heig.text = s2;
 
         CalculateWaitTime();
-        if (waisti != null) waisti.text = s3;
+        if (waisti != null && waisti.gameObject.activeSelf) waisti.text = s3;
 
         UpdateColors();
 
         CalculateFocusTime();
-        if (focun != null) focun.text = s4;
+        if (focun != null && focun.gameObject.activeSelf) focun.text = s4;
     }
 
     private void FormatTime()
@@ -118,12 +122,12 @@ public class ValChange : MonoBehaviour
 
     private void UpdateColors()
     {
-        // Direction C: Calm palette - never alarming red or warning yellow
+        // Forest Mineral & Sage: zero red or yellow warning states
         Color targetColor = condition switch
         {
-            1 => new Color(0.714f, 0.702f, 0.808f, 1f), // TextSecondary #B6B3CE
-            2 => new Color(0.608f, 0.596f, 0.902f, 1f), // AccentLavender #9B98E6
-            _ => new Color(0.957f, 0.953f, 0.973f, 1f)  // TextPrimary #F4F3F8
+            1 => ThemeTokens.TextMuted,
+            2 => ThemeTokens.AccentSage,
+            _ => ThemeTokens.TextPrimary
         };
 
         if (waisti != null) waisti.color = targetColor;

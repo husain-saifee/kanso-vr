@@ -4,6 +4,30 @@ This document tracks all changes made to the Kanso VR (formerly DePhobia) codeba
 
 ---
 
+## [2.0.0] - 2026-10-28: Forest Mineral & Sage UI Redesign
+
+### Complete Visual & Architectural Redesign
+- **Forest Mineral & Sage Visual Language**: Purged all generic blue and violet shades across the entire project. Standardized on Earth Charcoal (#141614), Dark Spruce Moss (#1E221E), Lichen Border (#343A34), Warm Off-White (#F3F5F2), Ash Olive (#9AA299), Matcha Sage (#76936A), and Umber Clay (#AD6E60).
+- **Plus Jakarta Sans Typography**: Introduced clean geometric sans typography (PlusJakartaSans.ttf) with balanced weights, sentence case, and zero shouting ALL-CAPS.
+- **Centralized Design Tokens (ThemeTokens.cs)**: Created source-of-truth palette and UI styling helper methods used uniformly across all UI scripts.
+
+### Main Portal (Sanctuary) Overhaul (mainmenu.cs)
+- **Single Center Panel with 3 Tabs**: Replaced 6 nested legacy submenus and raw float input fields with a unified 3-tab portal (Enclosed Space, Rising Water, High Elevation).
+- **Inline Intensity Presets**: One-click calibrated presets (Gentle, Standard, Deep) with real-time parameter feedback.
+- **Loud Primary CTA**: Prominent Matcha Sage [ Begin Session ] button centered on the screen.
+- **In-Place View Swapping**: Selecting Session History or Comfort & Audio swaps the panel content in-place with a clean [ ← Back to Sessions ] header, completely eliminating popups and modal disorientation.
+- **Decommissioned Clutter**: Safely deactivated legacy FOLLOWOPT, social media solicitation links, and raw float input boxes.
+
+### Active Exposure & Somatic Feedback
+- **Zero Floating HUD in Line of Sight (ValChange.cs, rlook.cs)**: Removed all 5 floating HUD timers and telemetry numbers from the active field of view, keeping underlying mathematical telemetry intact for session logging.
+- **Horizon Respiration & Escape Ring (VRHorizonRespirationRing.cs)**: Added an ethereal 4.5s breathing guide anchored at the lower peripheral boundary. Looking down at the ring for 1.5s or tapping smoothly returns to the menu without anxiety.
+- **Somatic Cues**: Replaced intrusive text toast banners with subtle haptic impulses and spatial acoustic chimes.
+
+### In-Game Pause Slate & Milestone Closure
+- **Minimalist Two-Button Slate (VRInGamePauseMenu.cs)**: Streamlined pause interface to two clear choices: [ Resume Session ] (Sage) and [ Return to Menu ] (Clay), with elapsed time and a quiet hint for recentering view via Right Stick or 'R' key.
+- **Milestone Closure Flow (TherapySessionRitual.cs)**: Smooth fade to a clean summary card upon reaching milestones (summit 360m in Acrophobia, wall clamp 2.85m in Claustrophobia, water clamp 1.72m in Aquaphobia) showing duration and peak metric, with a single button to return to the Sanctuary.
+
+---
 ## [1.0.0] - 2026-10-24: Kanso VR Identity, Legibility & GitHub Release Polish
 
 ### Brand & Presentation Modernization

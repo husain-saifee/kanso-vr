@@ -4,8 +4,8 @@ using DePhobia.VR;
 
 /// <summary>
 /// Scene lifecycle controller for Claustrophobia (Enclosed Space) simulation.
-/// Initializes the patient session, manages the VR Player Rig, spawns the emergency beacon,
-/// and conducts the calming start/end rituals.
+/// Initializes the patient session, manages the VR Player Rig, spawns the horizon respiration ring,
+/// and conducts the calming start/end rituals under the Forest Mineral & Sage visual language.
 /// </summary>
 public class StartVr : MonoBehaviour
 {
@@ -91,7 +91,8 @@ public class StartVr : MonoBehaviour
             }
         }
 
-        // Ensure in-world emergency exit beacon exists
+        // Ensure horizon respiration ring and emergency beacon exist
+        VRHorizonRespirationRing.EnsureRingInScene();
         VREmergencyExitBeacon.EnsureBeaconInScene(null, new Vector3(-1.1f, 1.4f, 1.8f));
 
         // Fade in from black smoothly
@@ -120,7 +121,8 @@ public class StartVr : MonoBehaviour
                     }
                 }
 
-                TherapyAudioManager.TriggerCaption("Walls will begin moving gently. Take slow, steady breaths.", 5.0f);
+                var r = FindObjectOfType<VRPlayerRig>();
+                if (r != null) r.SendHapticImpulse(0.2f, 0.08f, UnityEngine.XR.XRNode.RightHand);
             });
         });
     }
@@ -159,7 +161,9 @@ public class StartVr : MonoBehaviour
             if (boundaryReached)
             {
                 _completionShown = true;
-                TherapyAudioManager.TriggerCaption("Walls have stabilized safely. Take a moment to breathe.", 5.0f);
+
+                var rig = FindObjectOfType<VRPlayerRig>();
+                if (rig != null) rig.SendHapticImpulse(0.3f, 0.12f, UnityEngine.XR.XRNode.RightHand);
 
                 float cycleDuration = TherapySettingsManager.Instance.clausMoveDuration + TherapySettingsManager.Instance.clausMoveAfter;
                 int count = (cycleDuration > 0.1f) ? (int)(xnegmove.tmeas / cycleDuration) : 0;

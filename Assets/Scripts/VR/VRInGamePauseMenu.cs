@@ -7,9 +7,12 @@ using DePhobia.Core;
 namespace DePhobia.VR
 {
     /// <summary>
-    /// In-game floating pause menu and patient safety controller.
-    /// Styled under Direction C (Soft & Abstract Horizon) with non-shaming,
-    /// supportive copy and accessible comfort quick-toggles.
+    /// In-game floating pause menu: Strict Minimalist Two-Button Slate.
+    /// Styled under Forest Mineral & Sage with zero blue or violet tones.
+    /// Focused purely on the user's primary choices:
+    /// 1. "Resume Session" (Prominent Matcha Sage)
+    /// 2. "Return to Menu" (Gentle Umber Clay)
+    /// Recenter and seated toggles remain accessible via Right Thumbstick click or 'R' key.
     /// </summary>
     public class VRInGamePauseMenu : MonoBehaviour
     {
@@ -17,7 +20,6 @@ namespace DePhobia.VR
         public Transform vrCamera;
         public GameObject pauseCanvas;
         public TextMeshProUGUI durationText;
-        public TextMeshProUGUI subtitleText;
 
         [Header("Settings")]
         public float distanceFromPlayer = 1.8f;
@@ -45,7 +47,7 @@ namespace DePhobia.VR
 
         private void Update()
         {
-            // Check universal OpenXR inputs
+            // Universal OpenXR & desktop inputs
             bool toggleRequested = Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P);
 
             // Left Hand Menu Button or Secondary Button (Y / B)
@@ -122,27 +124,6 @@ namespace DePhobia.VR
             }
         }
 
-        public void Recenter()
-        {
-            var rig = FindObjectOfType<VRPlayerRig>();
-            if (rig != null)
-            {
-                rig.RecenterView();
-                PositionCanvasInFrontOfPlayer();
-                rig.SendHapticImpulse(0.3f, 0.1f, XRNode.RightHand);
-            }
-        }
-
-        public void ToggleSeatedMode()
-        {
-            var sm = TherapySettingsManager.Instance;
-            if (sm != null)
-            {
-                sm.SetSeatedMode(!sm.seatedMode);
-                Recenter();
-            }
-        }
-
         public void SaveAndExitToMenu()
         {
             Time.timeScale = 1f;
@@ -172,7 +153,7 @@ namespace DePhobia.VR
             forward.Normalize();
 
             Vector3 targetPos = vrCamera.position + (forward * distanceFromPlayer);
-            targetPos.y = vrCamera.position.y; // Eye level
+            targetPos.y = vrCamera.position.y; // Centered at eye level
 
             pauseCanvas.transform.position = targetPos;
             pauseCanvas.transform.rotation = Quaternion.LookRotation(forward);
@@ -190,77 +171,52 @@ namespace DePhobia.VR
 
             var scaler = canvasObj.AddComponent<CanvasScaler>();
             scaler.dynamicPixelsPerUnit = 10;
-
             canvasObj.AddComponent<GraphicRaycaster>();
 
             var rect = canvasObj.GetComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(460, 360);
-            rect.localScale = Vector3.one * 0.0022f; // Calibrated for VR eye-level sharpness
+            rect.sizeDelta = new Vector2(440, 290);
+            rect.localScale = Vector3.one * 0.0022f;
 
-            // Direction C Background Surface: #242338 (95% opacity)
+            // Background Surface: Forest Mineral & Sage #1E221E (96% opacity)
             var panelObj = new GameObject("Panel");
             panelObj.transform.SetParent(canvasObj.transform, false);
             var panelImg = panelObj.AddComponent<Image>();
-            panelImg.color = new Color(0.141f, 0.137f, 0.220f, 0.95f);
+            panelImg.color = ThemeTokens.SurfacePanel;
             var panelRect = panelObj.GetComponent<RectTransform>();
             panelRect.anchorMin = Vector2.zero;
             panelRect.anchorMax = Vector2.one;
             panelRect.offsetMin = Vector2.zero;
             panelRect.offsetMax = Vector2.zero;
 
-            // Title: #F4F3F8
-            var titleObj = new GameObject("Title");
-            titleObj.transform.SetParent(panelObj.transform, false);
-            var titleText = titleObj.AddComponent<TextMeshProUGUI>();
-            titleText.text = "Session Paused";
-            titleText.fontSize = 24;
-            titleText.alignment = TextAlignmentOptions.Center;
-            titleText.color = new Color(0.957f, 0.953f, 0.973f, 1f);
-            var titleRect = titleObj.GetComponent<RectTransform>();
-            titleRect.anchoredPosition = new Vector2(0, 125);
-            titleRect.sizeDelta = new Vector2(400, 35);
+            // Title: #F3F5F2
+            var title = ThemeTokens.CreateLabel(panelObj.transform, "Title", "Session Paused", 22, ThemeTokens.TextPrimary, TextAlignmentOptions.Center, true);
+            var titleRect = title.GetComponent<RectTransform>();
+            titleRect.anchoredPosition = new Vector2(0, 95);
+            titleRect.sizeDelta = new Vector2(400, 32);
 
-            // Subtitle: #B6B3CE
-            var subObj = new GameObject("Subtitle");
-            subObj.transform.SetParent(panelObj.transform, false);
-            subtitleText = subObj.AddComponent<TextMeshProUGUI>();
-            subtitleText.text = "You are in control. Take all the time you need.";
-            subtitleText.fontSize = 14;
-            subtitleText.alignment = TextAlignmentOptions.Center;
-            subtitleText.color = new Color(0.714f, 0.702f, 0.808f, 1f);
-            var subRect = subObj.GetComponent<RectTransform>();
-            subRect.anchoredPosition = new Vector2(0, 90);
-            subRect.sizeDelta = new Vector2(400, 25);
+            // Elapsed Time Subtitle
+            durationText = ThemeTokens.CreateLabel(panelObj.transform, "Duration", "Elapsed Time: 0s", 14, ThemeTokens.TextSecondary, TextAlignmentOptions.Center);
+            var durRect = durationText.GetComponent<RectTransform>();
+            durRect.anchoredPosition = new Vector2(0, 60);
+            durRect.sizeDelta = new Vector2(400, 24);
 
-            // Duration: #E8B89E (Dawn Amber gentle metric)
-            var durObj = new GameObject("Duration");
-            durObj.transform.SetParent(panelObj.transform, false);
-            durationText = durObj.AddComponent<TextMeshProUGUI>();
-            durationText.text = "Elapsed Time: 0s";
-            durationText.fontSize = 15;
-            durationText.alignment = TextAlignmentOptions.Center;
-            durationText.color = new Color(0.910f, 0.722f, 0.620f, 1f);
-            var durRect = durObj.GetComponent<RectTransform>();
-            durRect.anchoredPosition = new Vector2(0, 55);
-            durRect.sizeDelta = new Vector2(400, 25);
+            // Button 1 (Loud & Primary): [ Resume Session ]
+            CreateButton(panelObj.transform, "ResumeButton", "Resume Session", new Vector2(0, 5), ThemeTokens.AccentSage, Resume, true);
 
-            // Button 1: Resume Session (StateSerene #7E9F94)
-            CreateButton(panelObj.transform, "ResumeButton", "Resume Session", new Vector2(0, 10), new Color(0.494f, 0.624f, 0.580f, 1f), Resume);
+            // Button 2 (Quiet & Calm): [ Return to Menu ]
+            CreateButton(panelObj.transform, "ExitButton", "Return to Menu", new Vector2(0, -60), ThemeTokens.GentleExitClay, SaveAndExitToMenu, false);
 
-            // Button 2: Recenter View (SurfaceBorder #3A3854)
-            CreateButton(panelObj.transform, "RecenterButton", "Recenter View", new Vector2(0, -45), new Color(0.227f, 0.220f, 0.329f, 0.95f), Recenter);
-
-            // Button 3: Toggle Seated/Standing Mode (SurfaceBorder #3A3854)
-            CreateButton(panelObj.transform, "SeatedButton", "Toggle Seated / Standing", new Vector2(0, -100), new Color(0.227f, 0.220f, 0.329f, 0.95f), ToggleSeatedMode);
-
-            // Button 4: Save & Return to Menu (StateGentleExit #D48D8D, soft rose, never harsh red)
-            CreateButton(panelObj.transform, "ExitButton", "Save & Return to Menu", new Vector2(0, -155), new Color(0.831f, 0.553f, 0.553f, 1f), SaveAndExitToMenu);
+            // Quiet Recenter Hint
+            var hint = ThemeTokens.CreateLabel(panelObj.transform, "Hint", "Press R or Right Stick to recenter view", 12, ThemeTokens.TextMuted, TextAlignmentOptions.Center);
+            var hRect = hint.GetComponent<RectTransform>();
+            hRect.anchoredPosition = new Vector2(0, -112);
+            hRect.sizeDelta = new Vector2(400, 20);
 
             pauseCanvas = canvasObj;
             pauseCanvas.SetActive(false);
         }
 
-        private void CreateButton(Transform parent, string name, string label, Vector2 pos, Color btnColor, UnityEngine.Events.UnityAction action)
+        private void CreateButton(Transform parent, string name, string label, Vector2 pos, Color btnColor, UnityEngine.Events.UnityAction action, bool bold)
         {
             var btnObj = new GameObject(name);
             btnObj.transform.SetParent(parent, false);
@@ -274,18 +230,10 @@ namespace DePhobia.VR
 
             var btnRect = btnObj.GetComponent<RectTransform>();
             btnRect.anchoredPosition = pos;
-            btnRect.sizeDelta = new Vector2(340, 42);
+            btnRect.sizeDelta = new Vector2(340, 48);
 
-            var textObj = new GameObject("Text");
-            textObj.transform.SetParent(btnObj.transform, false);
-            var text = textObj.AddComponent<TextMeshProUGUI>();
-            text.text = label;
-            text.fontSize = 15;
-            text.alignment = TextAlignmentOptions.Center;
-            text.color = new Color(0.957f, 0.953f, 0.973f, 1f);
-            text.raycastTarget = false;
-
-            var textRect = textObj.GetComponent<RectTransform>();
+            var text = ThemeTokens.CreateLabel(btnObj.transform, "Text", label, 16, ThemeTokens.TextPrimary, TextAlignmentOptions.Center, bold);
+            var textRect = text.GetComponent<RectTransform>();
             textRect.anchorMin = Vector2.zero;
             textRect.anchorMax = Vector2.one;
             textRect.offsetMin = Vector2.zero;

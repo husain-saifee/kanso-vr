@@ -1,20 +1,17 @@
 using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
 using DePhobia.Core;
 
 namespace DePhobia.VR
 {
     /// <summary>
-    /// In-world physical emergency exit beacon for patients in distress.
-    /// Can be triggered via ray pointer click, gaze dwell (2.0s), or proximity.
-    /// Styled under Direction C (Soft & Abstract Horizon) with non-shaming copy.
+    /// In-world emergency exit beacon for patients in distress.
+    /// Synchronized with the Forest Mineral & Sage visual language and Horizon Respiration Ring.
     /// </summary>
     [RequireComponent(typeof(BoxCollider))]
     public class VREmergencyExitBeacon : MonoBehaviour
     {
-        [Tooltip("Gaze dwell time required to trigger exit if gaze-selected")]
-        public float gazeTriggerTime = 2.0f;
+        public float gazeTriggerTime = 1.5f;
         public TextMeshPro statusLabel;
         public TextMeshPro subLabel;
 
@@ -30,6 +27,9 @@ namespace DePhobia.VR
                 _collider.size = new Vector3(0.8f, 0.6f, 0.2f);
                 _collider.isTrigger = true;
             }
+
+            // Also ensure the Horizon Respiration Ring is active
+            VRHorizonRespirationRing.EnsureRingInScene();
         }
 
         private void Update()
@@ -42,7 +42,7 @@ namespace DePhobia.VR
                 if (statusLabel != null)
                 {
                     statusLabel.text = "Returning to Menu...";
-                    statusLabel.color = new Color(0.831f, 0.553f, 0.553f, 1f); // StateGentleExit #D48D8D
+                    statusLabel.color = ThemeTokens.GentleExitClay;
                 }
                 if (subLabel != null)
                 {
@@ -60,12 +60,12 @@ namespace DePhobia.VR
                 if (statusLabel != null)
                 {
                     statusLabel.text = "Return to Menu";
-                    statusLabel.color = new Color(0.957f, 0.953f, 0.973f, 1f); // TextPrimary #F4F3F8
+                    statusLabel.color = ThemeTokens.TextPrimary;
                 }
                 if (subLabel != null)
                 {
                     subLabel.text = "Hold gaze or tap to exit safely";
-                    subLabel.color = new Color(0.714f, 0.702f, 0.808f, 1f); // TextSecondary #B6B3CE
+                    subLabel.color = ThemeTokens.TextSecondary;
                 }
             }
         }
@@ -83,7 +83,6 @@ namespace DePhobia.VR
         public void TriggerEmergencyExit()
         {
             _isGazedAt = false;
-            Debug.Log("[VREmergencyExitBeacon] Patient requested calm return to menu.");
 
             var rig = FindObjectOfType<VRPlayerRig>();
             if (rig != null)
@@ -97,14 +96,9 @@ namespace DePhobia.VR
 
         private void OnMouseDown()
         {
-            // Desktop mouse / pointer click support
             TriggerEmergencyExit();
         }
 
-        /// <summary>
-        /// Guarantees that a calm emergency exit beacon exists in the scene.
-        /// Spawns one automatically in front of the user if none is found.
-        /// </summary>
         public static VREmergencyExitBeacon EnsureBeaconInScene(Transform parentTransform = null, Vector3? localOffset = null)
         {
             var existing = FindObjectOfType<VREmergencyExitBeacon>();
@@ -136,8 +130,7 @@ namespace DePhobia.VR
 
             var beacon = beaconObj.AddComponent<VREmergencyExitBeacon>();
 
-            // Visual background card (Direction C styling)
-            // Constructed with a clean procedural Quad Mesh to avoid triggering Unity 5+ non-convex MeshCollider errors on rigidbodies
+            // Visual background card (Forest Mineral & Sage styling)
             var cardGo = new GameObject("BeaconPlate");
             cardGo.transform.SetParent(beaconObj.transform, false);
             cardGo.transform.localScale = new Vector3(0.85f, 0.45f, 1f);
@@ -165,7 +158,7 @@ namespace DePhobia.VR
 
             var renderer = cardGo.AddComponent<MeshRenderer>();
             var mat = new Material(Shader.Find("Standard") ?? Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Diffuse") ?? Shader.Find("Unlit/Color"));
-            mat.color = new Color(0.141f, 0.137f, 0.220f, 0.95f); // SurfacePanel #242338
+            mat.color = ThemeTokens.SurfacePanel;
             renderer.material = mat;
 
             // Text Labels
@@ -176,7 +169,7 @@ namespace DePhobia.VR
             statusTmp.text = "Return to Menu";
             statusTmp.fontSize = 2.4f;
             statusTmp.alignment = TextAlignmentOptions.Center;
-            statusTmp.color = new Color(0.957f, 0.953f, 0.973f, 1f);
+            statusTmp.color = ThemeTokens.TextPrimary;
             beacon.statusLabel = statusTmp;
 
             var subObj = new GameObject("SubLabel");
@@ -186,7 +179,7 @@ namespace DePhobia.VR
             subTmp.text = "Hold gaze or tap to exit safely";
             subTmp.fontSize = 1.4f;
             subTmp.alignment = TextAlignmentOptions.Center;
-            subTmp.color = new Color(0.714f, 0.702f, 0.808f, 1f);
+            subTmp.color = ThemeTokens.TextSecondary;
             beacon.subLabel = subTmp;
 
             return beacon;

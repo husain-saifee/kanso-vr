@@ -47,7 +47,7 @@ Traditional virtual reality exposure simulations often borrow mechanics from con
 
 **Kanso VR redesigns exposure therapy around composure, autonomy, and quiet dignity:**
 
-- **Spacious & Unburdened:** Clear visual fields with soft, boundaryless twilight lighting ([Direction C Design System](DESIGN_SYSTEM.md)).
+- **Spacious & Unburdened:** Clear visual fields with soft, boundaryless organic earth lighting ([Forest Mineral & Sage Design System](DESIGN_SYSTEM.md)).
 - **Patient Agency:** The patient retains 100% control at every micro-moment. Simulations start only when the patient feels settled, and can be paused or exited instantly without shame or penalty.
 - **Acoustic Peace:** Zero sudden horns, alarms, or buzzing. Features a procedurally synthesized 432 Hz harmonic ambient drone with zero loop seams.
 - **Physical Vestibular Safety:** Automatic seated-mode height compensation, snap turning, dynamic peripheral tunneling vignettes, and physical in-world emergency beacons.
@@ -117,7 +117,7 @@ Kanso VR is built strictly compliant with **W3C XR Accessibility User Requiremen
 
 | Accessibility Dimension | Implementation in Kanso VR | Verification |
 | :--- | :--- | :--- |
-| **Color Contrast** | Primary text (`#F4F3F8`) on elevated surface panels (`#242338`) delivers a contrast ratio of **14.8:1**. | Exceeds WCAG 2.2 AAA standard (7:1). |
+| **Color Contrast** | Primary text (`#F3F5F2`) on elevated surface panels (`#1E221E`) delivers a contrast ratio of **14.2:1**. | Exceeds WCAG 2.2 AAA standard (7:1). |
 | **Colorblind-Safe Design** | Status changes never rely on color alone; always paired with shape, position, and text. Punitive warning red and alarm yellow are banned. | Verified with Protanopia & Deuteranopia simulators. |
 | **Multi-Modal Captions** | [`TherapyCaptionUI.cs`](Assets/Scripts/VR/TherapyCaptionUI.cs) renders synchronized subtitles in the lower field of view for all environmental audio events. | Full deaf / hard-of-hearing coverage. |
 | **Seated Mode Normalization** | [`VRPlayerRig.cs`](Assets/Scripts/VR/VRPlayerRig.cs) dynamically offsets camera height (`+0.35m`) for seated or wheelchair users. | Full eye-level visibility without neck hyperextension. |
@@ -175,7 +175,7 @@ Ensure scenes are registered in `EditorBuildSettings.asset`:
 | Document | Purpose & Contents |
 | :--- | :--- |
 | **[BRAND_IDENTITY.md](BRAND_IDENTITY.md)** | Etymology of Kanso (簡素), brand mark geometry, color tokens, and acoustic signature. |
-| **[DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)** | Direction C source of truth: spatial layout, motion presets (`breathe`, `settle`), and audio hierarchy. |
+| **[DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)** | Forest Mineral & Sage source of truth: spatial layout, motion presets (`breathe`, `settle`), and audio hierarchy. |
 | **[TONE_OF_VOICE.md](TONE_OF_VOICE.md)** | Non-shaming copy rules, second-person supportive phrasing, and banned clinical terms. |
 | **[ACCESSIBILITY.md](ACCESSIBILITY.md)** | WCAG 2.2 AAA compliance matrix, colorblind simulation data, and motor accessibility. |
 | **[PLAYTEST_SCRIPT.md](PLAYTEST_SCRIPT.md)** | 20-minute human manual test script with expected outcomes for QA and therapists. |

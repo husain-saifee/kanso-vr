@@ -4,8 +4,8 @@ using DePhobia.VR;
 
 /// <summary>
 /// Scene lifecycle controller for Aquaphobia (Rising Water) simulation.
-/// Initializes the patient session, manages the VR Player Rig, spawns the emergency beacon,
-/// and conducts the calming start/end rituals.
+/// Initializes the patient session, manages the VR Player Rig, spawns the horizon respiration ring,
+/// and conducts the calming start/end rituals under the Forest Mineral & Sage visual language.
 /// </summary>
 public class StartVr2 : MonoBehaviour
 {
@@ -20,7 +20,7 @@ public class StartVr2 : MonoBehaviour
         _waterScript = FindObjectOfType<MoreHeight1>();
         if (_waterScript != null) _waterScript.enabled = false;
 
-        // Disable legacy VRLookWalk and any duplicate CharacterControllers on this GameObject to prevent physics collisions and falling into void
+        // Disable legacy VRLookWalk and duplicate CharacterControllers
         var lookWalk = FindObjectOfType<VRLookWalk>();
         if (lookWalk != null)
         {
@@ -40,7 +40,7 @@ public class StartVr2 : MonoBehaviour
             oldRb.useGravity = false;
         }
 
-        // Raycast down to find the safe island sand elevation so player never spawns in mid-air or void
+        // Raycast down to find safe island sand elevation
         Vector3 spawnPos = new Vector3(-6f, 1.2f, 8f);
         if (Physics.Raycast(new Vector3(-6f, 25f, 8f), Vector3.down, out RaycastHit groundHit, 50f))
         {
@@ -69,7 +69,8 @@ public class StartVr2 : MonoBehaviour
             rig.transform.position = spawnPos;
         }
 
-        // Ensure in-world emergency exit beacon exists
+        // Ensure horizon respiration ring and emergency beacon exist
+        VRHorizonRespirationRing.EnsureRingInScene();
         VREmergencyExitBeacon.EnsureBeaconInScene(null, new Vector3(-1.2f, 1.3f, 1.8f));
 
         // Fade in from black smoothly
@@ -81,7 +82,8 @@ public class StartVr2 : MonoBehaviour
                 _waterActive = true;
                 if (_waterScript != null) _waterScript.enabled = true;
 
-                TherapyAudioManager.TriggerCaption("Water levels will begin rising gently. Take slow, steady breaths.", 5.0f);
+                var r = FindObjectOfType<VRPlayerRig>();
+                if (r != null) r.SendHapticImpulse(0.2f, 0.08f, UnityEngine.XR.XRNode.RightHand);
             });
         });
     }
@@ -94,7 +96,9 @@ public class StartVr2 : MonoBehaviour
             if (_waterScript.transform.position.y >= 1.72f)
             {
                 _completionShown = true;
-                TherapyAudioManager.TriggerCaption("Water levels have reached safe threshold. Take a moment to breathe.", 5.0f);
+
+                var rig = FindObjectOfType<VRPlayerRig>();
+                if (rig != null) rig.SendHapticImpulse(0.3f, 0.12f, UnityEngine.XR.XRNode.RightHand);
 
                 string summary = $"Safe Water Threshold Reached • Height: {_waterScript.transform.position.y:F2}m";
                 TherapySessionRitual.ShowEndRitual("Rising Water", summary, () =>

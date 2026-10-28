@@ -6,16 +6,17 @@ namespace DePhobia.VR
     /// <summary>
     /// Automatically converts UI canvases to comfortable 3D World Space in VR,
     /// preventing eye strain and locked-to-head motion sickness.
+    /// Calibrated for 1.8m eye-level sharpness in OpenXR and desktop.
     /// </summary>
     [RequireComponent(typeof(Canvas))]
     public class VRWorldSpaceCanvasHelper : MonoBehaviour
     {
         [Tooltip("Distance in front of player eye position (meters)")]
-        public float spawnDistance = 2.4f;
+        public float spawnDistance = 1.8f;
         [Tooltip("Height of canvas relative to player origin (meters)")]
         public float eyeHeight = 1.5f;
         [Tooltip("Uniform scale factor for world space canvas")]
-        public float worldScale = 0.0025f;
+        public float worldScale = 0.0022f;
 
         private Canvas _canvas;
 

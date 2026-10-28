@@ -104,6 +104,9 @@ public class vrlook : MonoBehaviour
 
         ValChange.hf = (int)transform.position.y;
         ValChange.HighestHigh = Mathf.Max(ValChange.HighestHigh, transform.position.y);
+
+        // Ensure the calm horizon respiration & escape ring is active
+        VRHorizonRespirationRing.EnsureRingInScene();
     }
 
     void Update()
@@ -277,10 +280,14 @@ public class vrlook : MonoBehaviour
             Max.SetActive(false);
         }
 
-        TherapyAudioManager.TriggerCaption("Summit reached (360m). Take a moment to breathe.", 6.0f);
+        var rig = FindObjectOfType<VRPlayerRig>();
+        if (rig != null)
+        {
+            rig.SendHapticImpulse(0.3f, 0.1f, UnityEngine.XR.XRNode.RightHand);
+        }
 
         // Show peaceful End Ritual
-        TherapySessionRitual.ShowEndRitual("High Elevation", "Peak Altitude Reached: 360m", () =>
+        TherapySessionRitual.ShowEndRitual("High Elevation", "Summit Reached • 360m Altitude", () =>
         {
             var startVr3 = FindObjectOfType<StartVr3>();
             if (startVr3 != null)

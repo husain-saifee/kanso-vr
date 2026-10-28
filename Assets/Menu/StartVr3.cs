@@ -5,7 +5,8 @@ using DePhobia.VR;
 /// <summary>
 /// Scene lifecycle controller for Acrophobia (High Elevation) simulation.
 /// Initializes the patient session, anchors VRPlayerRig to the ascending hoverboard,
-/// positions hoverboard safely over the city avenue, and conducts the calming start ritual.
+/// positions hoverboard safely over the city avenue, and conducts the calming start ritual
+/// under the Forest Mineral & Sage visual language.
 /// </summary>
 public class StartVr3 : MonoBehaviour
 {
@@ -82,7 +83,8 @@ public class StartVr3 : MonoBehaviour
             _lookScript.enabled = false; // Hold until Start Ritual completes
         }
 
-        // Anchor in-world emergency exit beacon to the hoverboard
+        // Ensure horizon respiration ring and emergency beacon exist
+        VRHorizonRespirationRing.EnsureRingInScene();
         if (_lookScript != null)
         {
             VREmergencyExitBeacon.EnsureBeaconInScene(_lookScript.transform, new Vector3(-0.85f, 1.25f, 1.2f));
@@ -101,8 +103,9 @@ public class StartVr3 : MonoBehaviour
                 if (_lookScript != null)
                 {
                     _lookScript.enabled = true;
-                    TherapyAudioManager.TriggerCaption("Look downward to ascend gently. Look forward to pause.", 5.0f);
                 }
+                var r = FindObjectOfType<VRPlayerRig>();
+                if (r != null) r.SendHapticImpulse(0.2f, 0.08f, UnityEngine.XR.XRNode.RightHand);
             });
         });
     }

@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using DePhobia.Core;
 
 namespace DePhobia.VR
 {
@@ -116,7 +117,7 @@ namespace DePhobia.VR
         private IEnumerator FadeRoutine(float fromAlpha, float toAlpha, float duration, Action onComplete)
         {
             float elapsed = 0f;
-            Color col = Color.black;
+            Color col = ThemeTokens.CanvasBg;
 
             while (elapsed < duration)
             {

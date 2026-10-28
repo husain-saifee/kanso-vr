@@ -7,9 +7,9 @@ using DePhobia.Core;
 namespace DePhobia.VR
 {
     /// <summary>
-    /// Displays calm, high-contrast subtitles/captions for environmental sounds
-    /// and guidance in VR, anchored in the lower field of view.
-    /// Fulfills WCAG 2.2 and XR accessibility requirements.
+    /// Displays high-contrast, cinematic subtitles in the lower field of view.
+    /// Styled under Forest Mineral & Sage with zero blue or violet tones.
+    /// Quiet and restrained: only appears when explicit dialogue or speech occurs.
     /// </summary>
     public class TherapyCaptionUI : MonoBehaviour
     {
@@ -58,7 +58,6 @@ namespace DePhobia.VR
 
         private void LateUpdate()
         {
-            // Keep caption panel comfortably positioned in the lower field of view
             if (_panel != null && _panel.activeSelf)
             {
                 Camera cam = Camera.main;
@@ -68,7 +67,7 @@ namespace DePhobia.VR
                     if (forward.sqrMagnitude < 0.01f) forward = cam.transform.forward;
                     forward.Normalize();
 
-                    Vector3 pos = cam.transform.position + (forward * 1.6f) - new Vector3(0, 0.35f, 0);
+                    Vector3 pos = cam.transform.position + (forward * 1.6f) - new Vector3(0, 0.38f, 0);
                     _canvas.transform.position = pos;
                     _canvas.transform.rotation = Quaternion.LookRotation(forward);
                 }
@@ -78,6 +77,7 @@ namespace DePhobia.VR
         public void ShowCaption(string message, float duration)
         {
             if (_panel == null || _captionText == null) return;
+            if (TherapySettingsManager.Instance != null && !TherapySettingsManager.Instance.subtitlesEnabled) return;
 
             _captionText.text = message;
             _panel.SetActive(true);
@@ -105,32 +105,32 @@ namespace DePhobia.VR
             scaler.dynamicPixelsPerUnit = 10;
 
             var rect = canvasObj.GetComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(500, 80);
+            rect.sizeDelta = new Vector2(500, 70);
             rect.localScale = Vector3.one * 0.0022f;
 
-            // Background panel: #242338 (92% opacity)
+            // Background panel: Forest Mineral & Sage
             _panel = new GameObject("Panel");
             _panel.transform.SetParent(canvasObj.transform, false);
             var img = _panel.AddComponent<Image>();
-            img.color = new Color(0.141f, 0.137f, 0.220f, 0.92f);
+            img.color = ThemeTokens.SurfacePanel;
             var panelRect = _panel.GetComponent<RectTransform>();
             panelRect.anchorMin = Vector2.zero;
             panelRect.anchorMax = Vector2.one;
             panelRect.offsetMin = Vector2.zero;
             panelRect.offsetMax = Vector2.zero;
 
-            // Caption Text: #F4F3F8
+            // Caption Text
             var textObj = new GameObject("Text");
             textObj.transform.SetParent(_panel.transform, false);
             _captionText = textObj.AddComponent<TextMeshProUGUI>();
-            _captionText.fontSize = 16;
+            _captionText.fontSize = 15;
             _captionText.alignment = TextAlignmentOptions.Center;
-            _captionText.color = new Color(0.957f, 0.953f, 0.973f, 1f);
+            _captionText.color = ThemeTokens.TextPrimary;
             var textRect = textObj.GetComponent<RectTransform>();
             textRect.anchorMin = Vector2.zero;
             textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = new Vector2(12, 6);
-            textRect.offsetMax = new Vector2(-12, -6);
+            textRect.offsetMin = new Vector2(16, 6);
+            textRect.offsetMax = new Vector2(-16, -6);
 
             _panel.SetActive(false);
         }
