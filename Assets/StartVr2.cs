@@ -4,7 +4,6 @@ using DePhobia.VR;
 
 /// <summary>
 /// Scene lifecycle controller for Aquaphobia (Rising Water) simulation.
-/// Initializes the patient session, manages the VR Player Rig, spawns the horizon respiration ring,
 /// and conducts the calming start/end rituals under the Forest Mineral & Sage visual language.
 /// </summary>
 public class StartVr2 : MonoBehaviour
@@ -18,7 +17,7 @@ public class StartVr2 : MonoBehaviour
         PatientSessionManager.Instance.StartSession("Aquaphobia");
 
         // Enable atmospheric coastal distance fog (Aquaphobia only)
-        EnableAquaphobiaDistanceFog();
+        RenderSettings.fog = false;
 
         _waterScript = FindObjectOfType<MoreHeight1>();
         if (_waterScript != null) _waterScript.enabled = false;
@@ -72,8 +71,6 @@ public class StartVr2 : MonoBehaviour
             rig.transform.position = spawnPos;
         }
 
-        // Ensure horizon respiration ring and emergency beacon exist
-        VRHorizonRespirationRing.EnsureRingInScene();
         VREmergencyExitBeacon.EnsureBeaconInScene(null, new Vector3(-1.2f, 1.3f, 1.8f));
 
         // Fade in from black smoothly
@@ -95,8 +92,8 @@ public class StartVr2 : MonoBehaviour
     {
         if (_waterActive && !_completionShown && _waterScript != null)
         {
-            // Safe height boundary clamped around 1.72m
-            if (_waterScript.transform.position.y >= 1.72f)
+            // Safe height boundary clamped around 1.72m (minimum 20s active exposure)
+            if (_waterScript.transform.position.y >= 1.72f && PatientSessionManager.Instance.GetCurrentSessionDuration() > 20f)
             {
                 _completionShown = true;
 
@@ -126,14 +123,7 @@ public class StartVr2 : MonoBehaviour
         }
     }
 
-    private void EnableAquaphobiaDistanceFog()
-    {
-        RenderSettings.fog = true;
-        RenderSettings.fogMode = FogMode.Linear;
-        RenderSettings.fogStartDistance = 15f;
-        RenderSettings.fogEndDistance = 120f;
-        RenderSettings.fogColor = new Color(0.68f, 0.74f, 0.72f, 1.0f); // Calming coastal sea-mist
-    }
+
 
     private void OnDestroy()
     {

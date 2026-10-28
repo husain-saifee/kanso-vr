@@ -1,16 +1,18 @@
+using System.Collections.Generic;
 using UnityEngine;
 using DePhobia.Core;
 using DePhobia.VR;
 
 /// <summary>
 /// Scene lifecycle controller for Claustrophobia (Enclosed Space) simulation.
-/// Initializes the patient session, manages the VR Player Rig, spawns the horizon respiration ring,
 /// and conducts the calming start/end rituals under the Forest Mineral & Sage visual language.
 /// </summary>
 public class StartVr : MonoBehaviour
 {
     private xposmove[] _posWalls;
     private xnegmove[] _negWalls;
+    private List<xposmove> _activePosWalls = new List<xposmove>();
+    private List<xnegmove> _activeNegWalls = new List<xnegmove>();
     private bool _wallsActive = false;
     private bool _completionShown = false;
 
@@ -43,6 +45,7 @@ public class StartVr : MonoBehaviour
                 wall.enabled = false;
                 var rb = wall.GetComponent<Rigidbody>();
                 if (rb != null && !rb.isKinematic) rb.velocity = Vector3.zero;
+                if (wall.transform.position.x < -4.5f) _activePosWalls.Add(wall);
             }
         }
 
@@ -56,6 +59,7 @@ public class StartVr : MonoBehaviour
                 wall.enabled = false;
                 var rb = wall.GetComponent<Rigidbody>();
                 if (rb != null && !rb.isKinematic) rb.velocity = Vector3.zero;
+                if (wall.transform.position.x > 4.5f) _activeNegWalls.Add(wall);
             }
         }
 
@@ -94,8 +98,6 @@ public class StartVr : MonoBehaviour
             }
         }
 
-        // Ensure horizon respiration ring and emergency beacon exist
-        VRHorizonRespirationRing.EnsureRingInScene();
         VREmergencyExitBeacon.EnsureBeaconInScene(null, new Vector3(-1.1f, 1.4f, 1.8f));
 
         // Fade in from black smoothly
@@ -132,14 +134,14 @@ public class StartVr : MonoBehaviour
 
     private void Update()
     {
-        if (_wallsActive && !_completionShown)
+        if (_wallsActive && !_completionShown && PatientSessionManager.Instance.GetCurrentSessionDuration() > 20f)
         {
-            // Check if any wall has reached the safe boundary (-2.85m and +2.85m)
+            // Check if any active moving wall has reached the safe boundary (-2.85m and +2.85m)
             bool boundaryReached = false;
 
-            if (_posWalls != null && _posWalls.Length > 0)
+            if (_activePosWalls != null && _activePosWalls.Count > 0)
             {
-                foreach (var wall in _posWalls)
+                foreach (var wall in _activePosWalls)
                 {
                     if (wall != null && wall.transform.position.x >= -2.85f)
                     {
@@ -149,9 +151,9 @@ public class StartVr : MonoBehaviour
                 }
             }
 
-            if (_negWalls != null && _negWalls.Length > 0)
+            if (_activeNegWalls != null && _activeNegWalls.Count > 0)
             {
-                foreach (var wall in _negWalls)
+                foreach (var wall in _activeNegWalls)
                 {
                     if (wall != null && wall.transform.position.x <= 2.85f)
                     {

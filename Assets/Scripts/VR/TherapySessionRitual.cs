@@ -43,8 +43,6 @@ namespace DePhobia.VR
             _isRitualActive = true;
             _isEndRitual = false;
 
-            // Ensure Horizon Respiration Ring is active
-            VRHorizonRespirationRing.EnsureRingInScene();
 
             // Settle sequence: 3 breaths (approx 5-6s) or immediate press of Space/Enter/Click
             StartCoroutine(StartRitualPacingRoutine());

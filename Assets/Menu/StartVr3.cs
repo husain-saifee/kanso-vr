@@ -86,8 +86,6 @@ public class StartVr3 : MonoBehaviour
             _lookScript.enabled = false; // Hold until Start Ritual completes
         }
 
-        // Ensure horizon respiration ring and emergency beacon exist
-        VRHorizonRespirationRing.EnsureRingInScene();
         if (_lookScript != null)
         {
             VREmergencyExitBeacon.EnsureBeaconInScene(_lookScript.transform, new Vector3(-0.85f, 1.25f, 1.2f));

@@ -6,7 +6,6 @@ namespace DePhobia.VR
 {
     /// <summary>
     /// In-world emergency exit beacon for patients in distress.
-    /// Synchronized with the Forest Mineral & Sage visual language and Horizon Respiration Ring.
     /// </summary>
     [RequireComponent(typeof(BoxCollider))]
     public class VREmergencyExitBeacon : MonoBehaviour
@@ -28,8 +27,6 @@ namespace DePhobia.VR
                 _collider.isTrigger = true;
             }
 
-            // Also ensure the Horizon Respiration Ring is active
-            VRHorizonRespirationRing.EnsureRingInScene();
         }
 
         private void Update()

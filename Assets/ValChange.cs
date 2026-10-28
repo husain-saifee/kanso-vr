@@ -36,6 +36,7 @@ public class ValChange : MonoBehaviour
 
     void Start()
     {
+        HighestHigh = 0;
         // Deactivate floating in-world HUD telemetry elements to preserve a quiet, designed visual field
         if (Timeobj != null) { timee = Timeobj.GetComponent<TextMeshProUGUI>(); Timeobj.SetActive(false); }
         if (Heigh != null) { heig = Heigh.GetComponent<TextMeshProUGUI>(); Heigh.SetActive(false); }

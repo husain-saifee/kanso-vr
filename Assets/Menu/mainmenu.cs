@@ -55,6 +55,19 @@ public class mainmenu : MonoBehaviour
     private Button _beginBtn;
     private TextMeshProUGUI _historyContentText;
 
+    private static mainmenu _activeInstance;
+
+    private void Awake()
+    {
+        // Prevent duplicate mainmenu instances (legacy scene has 4) from running simultaneous initializations
+        if (_activeInstance != null && _activeInstance != this && _activeInstance.gameObject.scene == gameObject.scene)
+        {
+            enabled = false;
+            return;
+        }
+        _activeInstance = this;
+    }
+
     private void Start()
     {
         // Fog is disabled in Main Menu (only active in Aquaphobia and Acrophobia)
@@ -89,20 +102,35 @@ public class mainmenu : MonoBehaviour
 
     private void DecommissionLegacyMenus()
     {
-        // Deactivate all legacy confusing submenus
-        string[] legacyNames = new string[]
+        // Completely deactivate all preexisting children across all Canvases to prevent old UI clashing
+        var allCanvases = FindObjectsOfType<Canvas>(true);
+        foreach (var c in allCanvases)
         {
-            "MainMenu", "GameSelect", "Settings", "GameSelectSettings",
-            "ClausSettingsMenu", "AquaSettingsMenu", "AcroSettingsMenu",
-            "STATMENU", "FOLLOWOPT", "Follow", "lOADING", "Wait"
-        };
-
-        foreach (var name in legacyNames)
-        {
-            var go = GameObject.Find(name);
-            if (go != null)
+            for (int i = 0; i < c.transform.childCount; i++)
             {
-                go.SetActive(false);
+                Transform child = c.transform.GetChild(i);
+
+                if (child.name == "SanctuaryMainCard")
+                {
+                    continue;
+                }
+
+                if (child.gameObject == this.gameObject)
+                {
+                    // Disable legacy graphic components on this script's host GameObject
+                    var graphics = child.GetComponents<Graphic>();
+                    foreach (var g in graphics) g.enabled = false;
+
+                    // Deactivate all child buttons/texts of this legacy menu
+                    for (int ch = 0; ch < child.childCount; ch++)
+                    {
+                        child.GetChild(ch).gameObject.SetActive(false);
+                    }
+                    continue;
+                }
+
+                // Deactivate all legacy UI objects
+                child.gameObject.SetActive(false);
             }
         }
     }
@@ -129,6 +157,10 @@ public class mainmenu : MonoBehaviour
         canvasHelper.SetupWorldSpace();
 
         _sanctuaryCanvas = canvas.gameObject;
+
+        // Destroy any duplicate or previous card if present
+        var existingCard = _sanctuaryCanvas.transform.Find("SanctuaryMainCard");
+        if (existingCard != null) Destroy(existingCard.gameObject);
 
         // Create the Main Master Container Card (640 x 480)
         _mainCard = new GameObject("SanctuaryMainCard");

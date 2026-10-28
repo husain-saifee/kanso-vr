@@ -103,10 +103,11 @@ public class vrlook : MonoBehaviour
         transform.rotation = Quaternion.Euler(0f, 90f, 0f);
 
         ValChange.hf = (int)transform.position.y;
-        ValChange.HighestHigh = Mathf.Max(ValChange.HighestHigh, transform.position.y);
+        ValChange.HighestHigh = transform.position.y;
+        endingstate = 0;
+        e = 0;
+        started = 0;
 
-        // Ensure the calm horizon respiration & escape ring is active
-        VRHorizonRespirationRing.EnsureRingInScene();
     }
 
     void Update()
@@ -122,7 +123,7 @@ public class vrlook : MonoBehaviour
             PlayAmbientSounds();
         }
 
-        if (ValChange.HighestHigh <= MAX_HOVERBOARD_Y && endingstate == 0)
+        if (endingstate == 0)
         {
             if (ValChange.hf <= 240 && ValChange.hf > 120 && d != 1)
             {
@@ -192,14 +193,10 @@ public class vrlook : MonoBehaviour
 
             tlast = Tim;
 
-            if (currentY >= MAX_HOVERBOARD_Y)
+            if (currentY >= MAX_HOVERBOARD_Y && PatientSessionManager.Instance.GetCurrentSessionDuration() > 20f)
             {
                 HandleEndingSequence();
             }
-        }
-        else
-        {
-            HandleEndingSequence();
         }
     }
 
