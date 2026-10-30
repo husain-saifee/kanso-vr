@@ -32,12 +32,12 @@
 - Produces: `TherapyAudioManager.SetRoomProximity(float normalizedProximity)`, `TherapyAudioManager.SetWaterSubmersion(float waterLevelRelative)`, `TherapyAudioManager.SetAcrophobiaAltitude(float currentY)`
 - Consumes: Scene boundary changes and player height from simulation scripts.
 
-- [ ] **Step 1:** Add `AudioReverbZone` setup and dynamic `AudioLowPassFilter` management to `TherapyAudioManager`.
-- [ ] **Step 2:** Implement scenario-specific acoustic profiles:
+- [x] **Step 1:** Add `AudioReverbZone` setup and dynamic `AudioLowPassFilter` management to `TherapyAudioManager`.
+- [x] **Step 2:** Implement scenario-specific acoustic profiles:
   - **Claustrophobia:** Acoustic confinement mode (early reflections tighten, high frequencies dampen as walls contract).
   - **Aquaphobia:** Subtle surface shore lap spatial blend, plus soft low-pass submersion shift when water reaches chest height.
   - **Acrophobia:** Atmospheric pressure drop curve (gradual wind buffeting surge and distant low-frequency rumble falloff as altitude approaches 360m).
-- [ ] **Step 3:** Compile and verify zero audio bus clipping or static distortion.
+- [x] **Step 3:** Compile and verify zero audio bus clipping or static distortion.
 
 ---
 
