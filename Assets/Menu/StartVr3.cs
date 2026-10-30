@@ -17,6 +17,7 @@ public class StartVr3 : MonoBehaviour
     {
         PatientSessionManager.Instance.StartSession("Acrophobia");
         TherapyAudioManager.Instance.PlayScenarioAmbience("Acrophobia");
+        TherapyAudioManager.Instance.SilenceRogueAudioSources();
 
         // 1. Configure baseline Acrophobia atmospheric distance fog
         EnableAcrophobiaDistanceFog();

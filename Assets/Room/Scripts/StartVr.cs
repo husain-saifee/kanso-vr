@@ -27,6 +27,7 @@ public class StartVr : MonoBehaviour
 
         PatientSessionManager.Instance.StartSession("Claustrophobia");
         TherapyAudioManager.Instance.PlayScenarioAmbience("Claustrophobia");
+        TherapyAudioManager.Instance.SilenceRogueAudioSources();
 
         _posWalls = FindObjectsOfType<xposmove>();
         _negWalls = FindObjectsOfType<xnegmove>();

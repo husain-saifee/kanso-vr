@@ -7,13 +7,11 @@ using DePhobia.Core;
 namespace DePhobia.VR
 {
     /// <summary>
-    /// In-game floating pause menu: Strict Minimalist Two-Button Slate.
+    /// In-game floating pause menu: Calibrated Compact Minimalist Two-Button Slate.
     /// Styled under Forest Mineral & Sage with zero blue or violet tones.
     /// Arrives and dismisses organically via spring physics (VRSpringCanvas),
+    /// sized comfortably for VR (360x230 @ 0.0018 scale at 1.4m),
     /// and provides tactile 3D button depression with physical haptic and acoustic confirmation.
-    /// Focused purely on the user's primary choices:
-    /// 1. "Resume Session" (Prominent Matcha Sage)
-    /// 2. "Return to Menu" (Gentle Umber Clay)
     /// </summary>
     public class VRInGamePauseMenu : MonoBehaviour
     {
@@ -23,7 +21,7 @@ namespace DePhobia.VR
         public TextMeshProUGUI durationText;
 
         [Header("Settings")]
-        public float distanceFromPlayer = 1.8f;
+        public float distanceFromPlayer = 1.4f;
         public bool isPaused { get; private set; } = false;
 
         private bool _menuButtonPressedLastFrame = false;
@@ -42,7 +40,8 @@ namespace DePhobia.VR
             }
             else
             {
-                VRSpringCanvas.Attach(pauseCanvas);
+                var sc = VRSpringCanvas.Attach(pauseCanvas);
+                sc.SetBaseScale(pauseCanvas.transform.localScale);
                 pauseCanvas.SetActive(false);
             }
         }
@@ -185,8 +184,8 @@ namespace DePhobia.VR
             canvasObj.AddComponent<GraphicRaycaster>();
 
             var rect = canvasObj.GetComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(440, 290);
-            rect.localScale = Vector3.one * 0.0022f;
+            rect.sizeDelta = new Vector2(360, 230);
+            rect.localScale = Vector3.one * 0.0018f;
 
             // Background Surface: Forest Mineral & Sage #1E221E (96% opacity)
             var panelObj = new GameObject("Panel");
@@ -200,31 +199,32 @@ namespace DePhobia.VR
             panelRect.offsetMax = Vector2.zero;
 
             // Title: #F3F5F2
-            var title = ThemeTokens.CreateLabel(panelObj.transform, "Title", "Session Paused", 22, ThemeTokens.TextPrimary, TextAlignmentOptions.Center, true);
+            var title = ThemeTokens.CreateLabel(panelObj.transform, "Title", "Session Paused", 18, ThemeTokens.TextPrimary, TextAlignmentOptions.Center, true);
             var titleRect = title.GetComponent<RectTransform>();
-            titleRect.anchoredPosition = new Vector2(0, 95);
-            titleRect.sizeDelta = new Vector2(400, 32);
+            titleRect.anchoredPosition = new Vector2(0, 75);
+            titleRect.sizeDelta = new Vector2(340, 26);
 
             // Elapsed Time Subtitle
-            durationText = ThemeTokens.CreateLabel(panelObj.transform, "Duration", "Elapsed Time: 0s", 14, ThemeTokens.TextSecondary, TextAlignmentOptions.Center);
+            durationText = ThemeTokens.CreateLabel(panelObj.transform, "Duration", "Elapsed Time: 0s", 13, ThemeTokens.TextSecondary, TextAlignmentOptions.Center);
             var durRect = durationText.GetComponent<RectTransform>();
-            durRect.anchoredPosition = new Vector2(0, 60);
-            durRect.sizeDelta = new Vector2(400, 24);
+            durRect.anchoredPosition = new Vector2(0, 48);
+            durRect.sizeDelta = new Vector2(340, 20);
 
             // Button 1 (Loud & Primary): [ Resume Session ]
-            CreateButton(panelObj.transform, "ResumeButton", "Resume Session", new Vector2(0, 5), ThemeTokens.AccentSage, Resume, true);
+            CreateButton(panelObj.transform, "ResumeButton", "Resume Session", new Vector2(0, 0), ThemeTokens.AccentSage, Resume, true);
 
             // Button 2 (Quiet & Calm): [ Return to Menu ]
-            CreateButton(panelObj.transform, "ExitButton", "Return to Menu", new Vector2(0, -60), ThemeTokens.GentleExitClay, SaveAndExitToMenu, false);
+            CreateButton(panelObj.transform, "ExitButton", "Return to Menu", new Vector2(0, -52), ThemeTokens.GentleExitClay, SaveAndExitToMenu, false);
 
             // Quiet Recenter Hint
-            var hint = ThemeTokens.CreateLabel(panelObj.transform, "Hint", "Press R or Right Stick to recenter view", 12, ThemeTokens.TextMuted, TextAlignmentOptions.Center);
+            var hint = ThemeTokens.CreateLabel(panelObj.transform, "Hint", "Press R or Right Stick to recenter view", 11, ThemeTokens.TextMuted, TextAlignmentOptions.Center);
             var hRect = hint.GetComponent<RectTransform>();
-            hRect.anchoredPosition = new Vector2(0, -112);
-            hRect.sizeDelta = new Vector2(400, 20);
+            hRect.anchoredPosition = new Vector2(0, -92);
+            hRect.sizeDelta = new Vector2(340, 18);
 
             pauseCanvas = canvasObj;
-            VRSpringCanvas.Attach(pauseCanvas);
+            var sc = VRSpringCanvas.Attach(pauseCanvas);
+            sc.SetBaseScale(rect.localScale);
             pauseCanvas.SetActive(false);
         }
 
@@ -242,12 +242,12 @@ namespace DePhobia.VR
 
             var btnRect = btnObj.GetComponent<RectTransform>();
             btnRect.anchoredPosition = pos;
-            btnRect.sizeDelta = new Vector2(340, 48);
+            btnRect.sizeDelta = new Vector2(280, 42);
 
             // Endow with 3D tactile depression and haptic feedback
             ThemeTokens.StyleButtonColors(btn, btnColor, btnColor * 1.12f, btnColor * 0.88f);
 
-            var text = ThemeTokens.CreateLabel(btnObj.transform, "Text", label, 16, ThemeTokens.TextPrimary, TextAlignmentOptions.Center, bold);
+            var text = ThemeTokens.CreateLabel(btnObj.transform, "Text", label, 15, ThemeTokens.TextPrimary, TextAlignmentOptions.Center, bold);
             var textRect = text.GetComponent<RectTransform>();
             textRect.anchorMin = Vector2.zero;
             textRect.anchorMax = Vector2.one;

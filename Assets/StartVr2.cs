@@ -16,6 +16,7 @@ public class StartVr2 : MonoBehaviour
     {
         PatientSessionManager.Instance.StartSession("Aquaphobia");
         TherapyAudioManager.Instance.PlayScenarioAmbience("Aquaphobia");
+        TherapyAudioManager.Instance.SilenceRogueAudioSources();
 
         // Enable atmospheric coastal distance fog (Aquaphobia only)
         RenderSettings.fog = false;

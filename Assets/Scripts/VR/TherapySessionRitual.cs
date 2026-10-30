@@ -12,7 +12,7 @@ namespace DePhobia.VR
     /// Styled under Forest Mineral & Sage with zero blue or violet tones.
     /// Start Ritual: Non-blocking; provides 3-breath ambient pacing and starts on gaze forward or tap.
     /// End Ritual: Stops the session and presents a calm Session Review card with data readout,
-    /// arriving through organic spring physics (VRSpringCanvas) and featuring tactile 3D buttons.
+    /// arriving through calibrated spring physics (VRSpringCanvas) and featuring tactile 3D buttons.
     /// </summary>
     public class TherapySessionRitual : MonoBehaviour
     {
@@ -228,15 +228,15 @@ namespace DePhobia.VR
             _ritualCanvas.AddComponent<GraphicRaycaster>();
 
             var cRect = _ritualCanvas.GetComponent<RectTransform>();
-            cRect.sizeDelta = new Vector2(540, 400);
-            cRect.localScale = Vector3.one * 0.0022f;
+            cRect.sizeDelta = new Vector2(500, 380);
+            cRect.localScale = Vector3.one * 0.0020f;
 
             if (cam != null)
             {
                 Vector3 forward = cam.transform.forward; forward.y = 0;
                 if (forward.sqrMagnitude < 0.01f) forward = cam.transform.forward;
                 forward.Normalize();
-                _ritualCanvas.transform.position = cam.transform.position + (forward * 1.8f);
+                _ritualCanvas.transform.position = cam.transform.position + (forward * 1.6f);
                 _ritualCanvas.transform.rotation = Quaternion.LookRotation(forward);
             }
 
@@ -250,16 +250,16 @@ namespace DePhobia.VR
             panelRect.offsetMin = Vector2.zero; panelRect.offsetMax = Vector2.zero;
 
             // Header Title
-            var title = ThemeTokens.CreateLabel(panelObj.transform, "Title", "Session Complete • Milestone Reached", 20, ThemeTokens.TextPrimary, TextAlignmentOptions.Center, true);
+            var title = ThemeTokens.CreateLabel(panelObj.transform, "Title", "Session Complete • Milestone Reached", 18, ThemeTokens.TextPrimary, TextAlignmentOptions.Center, true);
             var titleRect = title.GetComponent<RectTransform>();
-            titleRect.anchoredPosition = new Vector2(0, 148);
-            titleRect.sizeDelta = new Vector2(500, 30);
+            titleRect.anchoredPosition = new Vector2(0, 142);
+            titleRect.sizeDelta = new Vector2(460, 28);
 
             // Subtitle
-            var sub = ThemeTokens.CreateLabel(panelObj.transform, "Subtitle", "Take a quiet moment to review your exposure progress.", 13, ThemeTokens.TextSecondary, TextAlignmentOptions.Center);
+            var sub = ThemeTokens.CreateLabel(panelObj.transform, "Subtitle", "Take a quiet moment to review your exposure progress.", 12, ThemeTokens.TextSecondary, TextAlignmentOptions.Center);
             var subRect = sub.GetComponent<RectTransform>();
-            subRect.anchoredPosition = new Vector2(0, 115);
-            subRect.sizeDelta = new Vector2(500, 24);
+            subRect.anchoredPosition = new Vector2(0, 112);
+            subRect.sizeDelta = new Vector2(460, 22);
 
             // Review Data Box (Inner surface)
             var dataBox = new GameObject("DataBox");
@@ -268,31 +268,31 @@ namespace DePhobia.VR
             dataBoxImg.color = ThemeTokens.SurfaceInactive;
             var dbRect = dataBox.GetComponent<RectTransform>();
             dbRect.anchoredPosition = new Vector2(0, 15);
-            dbRect.sizeDelta = new Vector2(480, 130);
+            dbRect.sizeDelta = new Vector2(450, 130);
 
             // Row 1: Scenario
-            var row1 = ThemeTokens.CreateLabel(dataBox.transform, "Scenario", $"Scenario:  {phobiaName}", 14, ThemeTokens.TextPrimary, TextAlignmentOptions.Left, true);
+            var row1 = ThemeTokens.CreateLabel(dataBox.transform, "Scenario", $"Scenario:  {phobiaName}", 13, ThemeTokens.TextPrimary, TextAlignmentOptions.Left, true);
             var r1Rect = row1.GetComponent<RectTransform>();
             r1Rect.anchoredPosition = new Vector2(0, 38);
-            r1Rect.sizeDelta = new Vector2(440, 22);
+            r1Rect.sizeDelta = new Vector2(410, 22);
 
             // Row 2: Metrics / Peak Altitude
-            var row2 = ThemeTokens.CreateLabel(dataBox.transform, "Metrics", summaryMetrics, 14, ThemeTokens.AccentSage, TextAlignmentOptions.Left, true);
+            var row2 = ThemeTokens.CreateLabel(dataBox.transform, "Metrics", summaryMetrics, 13, ThemeTokens.AccentSage, TextAlignmentOptions.Left, true);
             var r2Rect = row2.GetComponent<RectTransform>();
             r2Rect.anchoredPosition = new Vector2(0, 10);
-            r2Rect.sizeDelta = new Vector2(440, 22);
+            r2Rect.sizeDelta = new Vector2(410, 22);
 
             // Row 3: Status
-            var row3 = ThemeTokens.CreateLabel(dataBox.transform, "Status", "Outcome:  Exposure Goal Accomplished Successfully", 13, ThemeTokens.TextSecondary, TextAlignmentOptions.Left);
+            var row3 = ThemeTokens.CreateLabel(dataBox.transform, "Status", "Outcome:  Exposure Goal Accomplished Successfully", 12, ThemeTokens.TextSecondary, TextAlignmentOptions.Left);
             var r3Rect = row3.GetComponent<RectTransform>();
             r3Rect.anchoredPosition = new Vector2(0, -18);
-            r3Rect.sizeDelta = new Vector2(440, 20);
+            r3Rect.sizeDelta = new Vector2(410, 20);
 
             // Row 4: Helper hint
-            var row4 = ThemeTokens.CreateLabel(dataBox.transform, "Hint", "Your session metrics have been securely recorded in the clinical log.", 12, ThemeTokens.TextMuted, TextAlignmentOptions.Left);
+            var row4 = ThemeTokens.CreateLabel(dataBox.transform, "Hint", "Your session metrics have been securely recorded in the clinical log.", 11, ThemeTokens.TextMuted, TextAlignmentOptions.Left);
             var r4Rect = row4.GetComponent<RectTransform>();
             r4Rect.anchoredPosition = new Vector2(0, -42);
-            r4Rect.sizeDelta = new Vector2(440, 18);
+            r4Rect.sizeDelta = new Vector2(410, 18);
 
             // Button 1: [ Restart Session ] (Left)
             var restartBtnObj = new GameObject("RestartButton");
@@ -305,10 +305,10 @@ namespace DePhobia.VR
             restartBtn.onClick.AddListener(OnEndRestartClicked);
 
             var rBtnRect = restartBtnObj.GetComponent<RectTransform>();
-            rBtnRect.anchoredPosition = new Vector2(-120, -120);
-            rBtnRect.sizeDelta = new Vector2(220, 48);
+            rBtnRect.anchoredPosition = new Vector2(-110, -120);
+            rBtnRect.sizeDelta = new Vector2(200, 44);
 
-            var rBtnText = ThemeTokens.CreateLabel(restartBtnObj.transform, "Text", "↺  Restart Session", 15, ThemeTokens.TextPrimary, TextAlignmentOptions.Center, true);
+            var rBtnText = ThemeTokens.CreateLabel(restartBtnObj.transform, "Text", "Restart Session", 14, ThemeTokens.TextPrimary, TextAlignmentOptions.Center, true);
             var rbtRect = rBtnText.GetComponent<RectTransform>();
             rbtRect.anchorMin = Vector2.zero; rbtRect.anchorMax = Vector2.one;
             rbtRect.offsetMin = Vector2.zero; rbtRect.offsetMax = Vector2.zero;
@@ -324,16 +324,18 @@ namespace DePhobia.VR
             returnBtn.onClick.AddListener(OnEndReturnClicked);
 
             var retBtnRect = returnBtnObj.GetComponent<RectTransform>();
-            retBtnRect.anchoredPosition = new Vector2(120, -120);
-            retBtnRect.sizeDelta = new Vector2(220, 48);
+            retBtnRect.anchoredPosition = new Vector2(110, -120);
+            retBtnRect.sizeDelta = new Vector2(200, 44);
 
-            var retBtnText = ThemeTokens.CreateLabel(returnBtnObj.transform, "Text", "✓  Main Menu", 15, ThemeTokens.AccentSageText, TextAlignmentOptions.Center, true);
+            var retBtnText = ThemeTokens.CreateLabel(returnBtnObj.transform, "Text", "Main Menu", 14, ThemeTokens.AccentSageText, TextAlignmentOptions.Center, true);
             var retBtRect = retBtnText.GetComponent<RectTransform>();
             retBtRect.anchorMin = Vector2.zero; retBtRect.anchorMax = Vector2.one;
             retBtRect.offsetMin = Vector2.zero; retBtRect.offsetMax = Vector2.zero;
 
-            // Attach spring arrival physics: smoothly scales and settles from 88% scale
-            VRSpringCanvas.Attach(_ritualCanvas).Arrive();
+            // Attach spring arrival physics: preserve calibrated localScale
+            var spring = VRSpringCanvas.Attach(_ritualCanvas);
+            spring.SetBaseScale(cRect.localScale);
+            spring.Arrive();
         }
     }
 }

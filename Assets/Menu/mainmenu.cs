@@ -85,13 +85,23 @@ public class mainmenu : MonoBehaviour
         SelectTab(0);
         SelectPreset("Standard");
 
-        // 4. Soften legacy ukulele audio if present
-        var audioSources = FindObjectsOfType<AudioSource>();
-        foreach (var src in audioSources)
+        // 4. Silence legacy ukulele and rogue scene audio completely
+        if (TherapyAudioManager.HasInstance && TherapyAudioManager.Instance != null)
         {
-            if (src.clip != null && src.clip.name.ToLowerInvariant().Contains("bensound"))
+            TherapyAudioManager.Instance.SilenceRogueAudioSources();
+        }
+        else
+        {
+            var audioSources = FindObjectsOfType<AudioSource>();
+            foreach (var src in audioSources)
             {
-                src.volume = 0.15f;
+                if (src.clip != null && src.clip.name.ToLowerInvariant().Contains("bensound"))
+                {
+                    src.Stop();
+                    src.volume = 0f;
+                    src.playOnAwake = false;
+                    src.enabled = false;
+                }
             }
         }
 
