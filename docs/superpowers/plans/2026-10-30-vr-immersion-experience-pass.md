@@ -77,16 +77,16 @@
 - Modify: `Assets/Scripts/VR/VRPlayerRig.cs`
 - Create: `Assets/Scripts/VR/VRSpatialReticle.cs`
 
-- [ ] **Step 1:** Implement a subtle world-space reticle/pointer with micro-damping that projects onto UI canvases and in-world interactables.
-- [ ] **Step 2:** Fire a light haptic tick (`amplitude = 0.08f, duration = 0.02f`) whenever the reticle enters or leaves a clickable element.
+- [x] **Step 1:** Implement a subtle world-space reticle/pointer with micro-damping that projects onto UI canvases and in-world interactables.
+- [x] **Step 2:** Fire a light haptic tick (`amplitude = 0.08f, duration = 0.02f`) whenever the reticle enters or leaves a clickable element.
 
 ### Task 3.2: 3D Physical Button Depression & Tactile Resistance
 **Files:**
 - Create: `Assets/Scripts/VR/VRTactileButton.cs`
 - Modify: `Assets/Scripts/Core/ThemeTokens.cs`
 
-- [ ] **Step 1:** Implement `VRTactileButton` providing 2-3mm physical z-depression on press with spring return follow-through.
-- [ ] **Step 2:** Synchronize click audio chime and distinct press haptic impulse (`0.25f, 0.06f`) at the exact point of bottoming out.
+- [x] **Step 1:** Implement `VRTactileButton` providing 2-3mm physical z-depression on press with spring return follow-through.
+- [x] **Step 2:** Synchronize click audio chime and distinct press haptic impulse (`0.25f, 0.06f`) at the exact point of bottoming out.
 
 ### Task 3.3: Spring-Physics Canvas Arrival & Dismissal
 **Files:**
@@ -94,8 +94,8 @@
 - Modify: `Assets/Scripts/VR/VRInGamePauseMenu.cs`
 - Modify: `Assets/Scripts/VR/TherapySessionRitual.cs`
 
-- [ ] **Step 1:** Implement `VRSpringCanvas` using unscaled time (`Time.unscaledDeltaTime`) so panels smoothly scale/ease from 0.90 to 1.00 with organic damping even when paused.
-- [ ] **Step 2:** Eliminate abrupt pop-in (`pauseCanvas.SetActive(true)`) and replace with smooth spring arrival and collapse dismissal.
+- [x] **Step 1:** Implement `VRSpringCanvas` using unscaled time (`Time.unscaledDeltaTime`) so panels smoothly scale/ease from 0.90 to 1.00 with organic damping even when paused.
+- [x] **Step 2:** Eliminate abrupt pop-in (`pauseCanvas.SetActive(true)`) and replace with smooth spring arrival and collapse dismissal.
 
 ---
 
