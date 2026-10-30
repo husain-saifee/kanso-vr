@@ -3,7 +3,8 @@ using DePhobia.Core;
 
 /// <summary>
 /// Controls water elevation dynamics in the Aquaphobia simulation.
-/// Uncomments and connects water rise speed, interval, and duration to TherapySettingsManager.
+/// Connects water rise speed, interval, and duration to TherapySettingsManager,
+/// and couples elevation to TherapyAudioManager for physical submersion acoustics.
 /// </summary>
 public class MoreHeight1 : MonoBehaviour
 {
@@ -36,6 +37,13 @@ public class MoreHeight1 : MonoBehaviour
     {
         time = Time.time - tstart;
 
+        // Continually update submersion acoustics in TherapyAudioManager
+        float relativeSubmersion = Mathf.InverseLerp(0.0f, 1.70f, transform.position.y);
+        if (TherapyAudioManager.HasInstance && TherapyAudioManager.Instance != null)
+        {
+            TherapyAudioManager.Instance.SetWaterSubmersion(relativeSubmersion);
+        }
+
         if (transform.position.y < 1.8f)
         {
             if (flag1 == 1 && (time - mstart) >= timerate)
@@ -51,6 +59,12 @@ public class MoreHeight1 : MonoBehaviour
                 vstart = time;
                 flag = 1;
                 flag1 = 0;
+
+                // Play gentle shore/water lap sound when water elevation begins rising
+                if (TherapyAudioManager.HasInstance && TherapyAudioManager.Instance != null)
+                {
+                    TherapyAudioManager.Instance.PlayWaterLap(0.40f);
+                }
             }
 
             if (flag == 1 && (time - vstart >= vtime))

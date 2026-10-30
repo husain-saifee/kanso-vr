@@ -5,10 +5,11 @@ using DePhobia.VR;
 namespace DePhobia.Core
 {
     /// <summary>
-    /// Central audio and captions manager for DePhobia.
-    /// Provides calibrated audio buses (Master, Ambience, Feedback, Voice),
+    /// Central audio and acoustic depth manager for DePhobia.
+    /// Provides calibrated audio buses (Master, Ambience, Feedback, Wind, Scenario),
+    /// dynamic room geometry via AudioReverbZone, proximity low-pass filtering,
     /// procedural calm harmonic ambient drone synthesis (432Hz, zero loop seams),
-    /// gentle UI feedback tones, and global subtitle event routing.
+    /// micro-tactile UI hover/click ticks, and structural physical soundscapes.
     /// </summary>
     public class TherapyAudioManager : MonoBehaviour
     {
@@ -58,9 +59,22 @@ namespace DePhobia.Core
         private AudioSource _scenarioSource;
         private AudioSource _windSource;
         private AudioSource _feedbackSource;
+        private AudioReverbZone _reverbZone;
+        private AudioLowPassFilter _listenerLowPass;
+        private AudioListener _currentListener;
 
         private string _currentScenario = "Menu";
         private float _lastAltitude = 32f;
+        private float _roomProximity = 0f;
+        private float _waterSubmersion = 0f;
+        private float _currentCutoff = 22000f;
+        private float _targetCutoff = 22000f;
+
+        // Cached procedural audio clips
+        private AudioClip _chimeClip;
+        private AudioClip _hoverTickClip;
+        private AudioClip _wallCreakClip;
+        private AudioClip _waterLapClip;
 
         private void Awake()
         {
@@ -74,6 +88,28 @@ namespace DePhobia.Core
             DontDestroyOnLoad(gameObject);
 
             SetupAudioSources();
+            SetupAcousticZone();
+            PreloadProceduralClips();
+        }
+
+        private void SetupAcousticZone()
+        {
+            _reverbZone = GetComponent<AudioReverbZone>();
+            if (_reverbZone == null)
+            {
+                _reverbZone = gameObject.AddComponent<AudioReverbZone>();
+            }
+            _reverbZone.minDistance = 60f;
+            _reverbZone.maxDistance = 300f;
+            _reverbZone.reverbPreset = AudioReverbPreset.Livingroom;
+        }
+
+        private void PreloadProceduralClips()
+        {
+            _chimeClip = CreateChimeFeedbackClip();
+            _hoverTickClip = CreateHoverTickClip();
+            _wallCreakClip = CreateWallCreakClip();
+            _waterLapClip = CreateWaterLapClip();
         }
 
         private void SetupAudioSources()
@@ -116,7 +152,7 @@ namespace DePhobia.Core
                 _windSource.clip = windClip;
             }
 
-            // 4. UI Audio Feedback
+            // 4. UI Audio Feedback & Tactile Point-of-Contact
             _feedbackSource = gameObject.AddComponent<AudioSource>();
             _feedbackSource.loop = false;
             _feedbackSource.playOnAwake = false;
@@ -130,6 +166,45 @@ namespace DePhobia.Core
             if (TherapySettingsManager.Instance != null)
             {
                 TherapySettingsManager.Instance.OnSettingsChanged += ApplyVolumes;
+            }
+        }
+
+        private void Update()
+        {
+            UpdateListenerTracking();
+            UpdateLowPassFiltration();
+        }
+
+        private void UpdateListenerTracking()
+        {
+            // Ensure ReverbZone center anchors to active player camera in world space
+            if (Camera.main != null)
+            {
+                transform.position = Camera.main.transform.position;
+            }
+
+            // Ensure AudioListener has an AudioLowPassFilter attached
+            if (_listenerLowPass == null)
+            {
+                var listener = FindObjectOfType<AudioListener>();
+                if (listener != null)
+                {
+                    _currentListener = listener;
+                    _listenerLowPass = listener.GetComponent<AudioLowPassFilter>();
+                    if (_listenerLowPass == null)
+                    {
+                        _listenerLowPass = listener.gameObject.AddComponent<AudioLowPassFilter>();
+                    }
+                }
+            }
+        }
+
+        private void UpdateLowPassFiltration()
+        {
+            if (_listenerLowPass != null)
+            {
+                _currentCutoff = Mathf.MoveTowards(_currentCutoff, _targetCutoff, 18000f * Time.unscaledDeltaTime);
+                _listenerLowPass.cutoffFrequency = _currentCutoff;
             }
         }
 
@@ -152,7 +227,7 @@ namespace DePhobia.Core
         }
 
         /// <summary>
-        /// Transitions the environmental audio layer to the active exposure scenario.
+        /// Transitions the environmental audio layer and acoustic reverb zone to the active exposure scenario.
         /// </summary>
         public void PlayScenarioAmbience(string scenarioName)
         {
@@ -169,6 +244,8 @@ namespace DePhobia.Core
                         _scenarioSource.clip = roomClip;
                         _scenarioSource.Play();
                     }
+                    if (_reverbZone != null) _reverbZone.reverbPreset = AudioReverbPreset.Room;
+                    _targetCutoff = 22000f;
                     break;
 
                 case "aquaphobia":
@@ -180,6 +257,8 @@ namespace DePhobia.Core
                         _scenarioSource.clip = waveClip;
                         _scenarioSource.Play();
                     }
+                    if (_reverbZone != null) _reverbZone.reverbPreset = AudioReverbPreset.Plain;
+                    _targetCutoff = 22000f;
                     break;
 
                 case "acrophobia":
@@ -194,16 +273,67 @@ namespace DePhobia.Core
                     {
                         _windSource.Play();
                     }
+                    if (_reverbZone != null) _reverbZone.reverbPreset = AudioReverbPreset.City;
+                    _targetCutoff = 22000f;
                     SetAcrophobiaAltitude(_lastAltitude);
                     break;
 
-                default: // Menu / Portal
+                default: // Menu / Portal Foyer
                     if (_scenarioSource != null && _scenarioSource.isPlaying) _scenarioSource.Stop();
                     if (_windSource != null && _windSource.isPlaying) _windSource.Stop();
+                    if (_reverbZone != null) _reverbZone.reverbPreset = AudioReverbPreset.Livingroom;
+                    _targetCutoff = 22000f;
                     break;
             }
 
             UpdateScenarioVolumes();
+        }
+
+        /// <summary>
+        /// Modulates acoustic confinement as walls contract inward in Claustrophobia.
+        /// As the space compresses, early reflections tighten and high frequencies soften,
+        /// creating physical acoustic intimacy rather than a sterile silent room.
+        /// </summary>
+        /// <param name="normalizedProximity">0.0 = walls at starting width; 1.0 = walls at safe limit (2.85m)</param>
+        public void SetRoomProximity(float normalizedProximity)
+        {
+            _roomProximity = Mathf.Clamp01(normalizedProximity);
+            if (_currentScenario.ToLowerInvariant().Contains("claus") || _currentScenario.ToLowerInvariant().Contains("enclosed"))
+            {
+                // As walls press in, acoustic flutter dampens from 22kHz down to 6kHz
+                _targetCutoff = Mathf.Lerp(22000f, 6000f, _roomProximity);
+
+                if (_reverbZone != null)
+                {
+                    _reverbZone.reverbPreset = (_roomProximity > 0.65f) ? AudioReverbPreset.PaddedCell : AudioReverbPreset.Room;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Modulates acoustic submersion as water rises toward and past player eye level in Aquaphobia.
+        /// </summary>
+        /// <param name="waterLevelRelative">0.0 = feet; 0.5 = waist; 0.8 = chest; 1.0 = head level</param>
+        public void SetWaterSubmersion(float waterLevelRelative)
+        {
+            _waterSubmersion = Mathf.Clamp01(waterLevelRelative);
+            if (_currentScenario.ToLowerInvariant().Contains("aqua") || _currentScenario.ToLowerInvariant().Contains("water"))
+            {
+                if (_waterSubmersion > 0.65f)
+                {
+                    float subT = Mathf.InverseLerp(0.65f, 1.0f, _waterSubmersion);
+                    _targetCutoff = Mathf.Lerp(22000f, 650f, subT);
+                    if (_reverbZone != null)
+                    {
+                        _reverbZone.reverbPreset = (subT > 0.5f) ? AudioReverbPreset.Underwater : AudioReverbPreset.Plain;
+                    }
+                }
+                else
+                {
+                    _targetCutoff = 22000f;
+                    if (_reverbZone != null) _reverbZone.reverbPreset = AudioReverbPreset.Plain;
+                }
+            }
         }
 
         /// <summary>
@@ -227,6 +357,11 @@ namespace DePhobia.Core
             {
                 _scenarioSource.volume = Mathf.Lerp(0.50f, 0.05f, normY) * amb;
             }
+
+            if (_reverbZone != null)
+            {
+                _reverbZone.reverbPreset = (normY > 0.45f) ? AudioReverbPreset.Mountains : AudioReverbPreset.City;
+            }
         }
 
         private void UpdateScenarioVolumes()
@@ -245,13 +380,43 @@ namespace DePhobia.Core
         }
 
         /// <summary>
-        /// Plays a brief, gentle acoustic click/chime for UI button feedback (<40ms).
+        /// Plays a brief, gentle acoustic click/chime for UI button activation (<40ms).
         /// </summary>
         public void PlayFeedbackClick()
         {
             if (_feedbackSource == null) return;
-            AudioClip click = CreateChimeFeedbackClip();
-            _feedbackSource.PlayOneShot(click, 0.65f);
+            if (_chimeClip == null) _chimeClip = CreateChimeFeedbackClip();
+            _feedbackSource.PlayOneShot(_chimeClip, 0.65f);
+        }
+
+        /// <summary>
+        /// Plays an ultra-short, soft acoustic tick when the spatial pointer hovers over a tactile UI element (<15ms).
+        /// </summary>
+        public void PlayHoverTick()
+        {
+            if (_feedbackSource == null) return;
+            if (_hoverTickClip == null) _hoverTickClip = CreateHoverTickClip();
+            _feedbackSource.PlayOneShot(_hoverTickClip, 0.35f);
+        }
+
+        /// <summary>
+        /// Plays a subtle structural strain/creak tone when physical walls or platform start moving.
+        /// </summary>
+        public void PlayWallCreak(float volume = 0.4f)
+        {
+            if (_feedbackSource == null) return;
+            if (_wallCreakClip == null) _wallCreakClip = CreateWallCreakClip();
+            _feedbackSource.PlayOneShot(_wallCreakClip, Mathf.Clamp01(volume));
+        }
+
+        /// <summary>
+        /// Plays a gentle shore/water lap sound when water passes a bodily threshold.
+        /// </summary>
+        public void PlayWaterLap(float volume = 0.45f)
+        {
+            if (_feedbackSource == null) return;
+            if (_waterLapClip == null) _waterLapClip = CreateWaterLapClip();
+            _feedbackSource.PlayOneShot(_waterLapClip, Mathf.Clamp01(volume));
         }
 
         /// <summary>
@@ -318,6 +483,85 @@ namespace DePhobia.Core
             }
 
             AudioClip clip = AudioClip.Create("ChimeClick", samplesCount, 1, sampleRate, false);
+            clip.SetData(samples, 0);
+            return clip;
+        }
+
+        /// <summary>
+        /// Procedurally creates a delicate, micro-acoustic tick for UI hover (<12ms, 1400Hz pulse).
+        /// </summary>
+        private AudioClip CreateHoverTickClip()
+        {
+            int sampleRate = 44100;
+            int samplesCount = Mathf.RoundToInt(0.012f * sampleRate);
+            float[] samples = new float[samplesCount];
+
+            float freq = 1400f;
+            for (int i = 0; i < samplesCount; i++)
+            {
+                float t = (float)i / sampleRate;
+                float envelope = Mathf.Exp(-t * 350f);
+                samples[i] = Mathf.Sin(2f * Mathf.PI * freq * t) * envelope * 0.25f;
+            }
+
+            AudioClip clip = AudioClip.Create("HoverTick", samplesCount, 1, sampleRate, false);
+            clip.SetData(samples, 0);
+            return clip;
+        }
+
+        /// <summary>
+        /// Procedurally creates a low structural creak/tension groan (<220ms).
+        /// </summary>
+        private AudioClip CreateWallCreakClip()
+        {
+            int sampleRate = 44100;
+            int samplesCount = Mathf.RoundToInt(0.22f * sampleRate);
+            float[] samples = new float[samplesCount];
+
+            for (int i = 0; i < samplesCount; i++)
+            {
+                float t = (float)i / sampleRate;
+                float env = Mathf.Sin(Mathf.PI * (t / 0.22f)); // bell curve
+                float f1 = Mathf.Sin(2f * Mathf.PI * 58f * t);
+                float f2 = Mathf.Sin(2f * Mathf.PI * 116f * t) * 0.5f;
+                float f3 = Mathf.Sin(2f * Mathf.PI * 174f * t) * 0.25f;
+                samples[i] = (f1 + f2 + f3) * env * 0.35f;
+            }
+
+            AudioClip clip = AudioClip.Create("WallCreak", samplesCount, 1, sampleRate, false);
+            clip.SetData(samples, 0);
+            return clip;
+        }
+
+        /// <summary>
+        /// Procedurally creates a gentle wave lap sound (<350ms).
+        /// </summary>
+        private AudioClip CreateWaterLapClip()
+        {
+            int sampleRate = 44100;
+            int samplesCount = Mathf.RoundToInt(0.35f * sampleRate);
+            float[] samples = new float[samplesCount];
+
+            // Pinkish filtered noise swell
+            System.Random rand = new System.Random(42);
+            float b0 = 0, b1 = 0, b2 = 0;
+
+            for (int i = 0; i < samplesCount; i++)
+            {
+                float t = (float)i / sampleRate;
+                float white = (float)(rand.NextDouble() * 2.0 - 1.0);
+
+                // Simple 3-pole pink filter
+                b0 = 0.99765f * b0 + white * 0.0990460f;
+                b1 = 0.96300f * b1 + white * 0.2965164f;
+                b2 = 0.57000f * b2 + white * 1.0526913f;
+                float pink = (b0 + b1 + b2 + white * 0.1848f) * 0.05f;
+
+                float envelope = Mathf.Sin(Mathf.PI * (t / 0.35f));
+                samples[i] = pink * envelope * 0.5f;
+            }
+
+            AudioClip clip = AudioClip.Create("WaterLap", samplesCount, 1, sampleRate, false);
             clip.SetData(samples, 0);
             return clip;
         }

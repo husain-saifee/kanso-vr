@@ -47,6 +47,13 @@ public class xnegmove : MonoBehaviour
             return;
         }
 
+        // Continually update room acoustic intimacy based on wall distance
+        float normProximity = Mathf.InverseLerp(6.0f, 2.85f, transform.position.x);
+        if (TherapyAudioManager.HasInstance && TherapyAudioManager.Instance != null)
+        {
+            TherapyAudioManager.Instance.SetRoomProximity(normProximity);
+        }
+
         // Safety clamp: do not move beyond safe threshold (+2.85m)
         if (transform.position.x <= 2.85f)
         {
@@ -71,6 +78,12 @@ public class xnegmove : MonoBehaviour
                 vstart = time;
                 flag = 1;
                 flag1 = 0;
+
+                // Play subtle structural creak as movement begins
+                if (TherapyAudioManager.HasInstance && TherapyAudioManager.Instance != null)
+                {
+                    TherapyAudioManager.Instance.PlayWallCreak(0.35f);
+                }
             }
 
             if (flag == 1 && (time - vstart >= vtime))
