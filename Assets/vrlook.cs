@@ -8,8 +8,9 @@ using DePhobia.VR;
 /// Core Acrophobia exposure therapy mechanic.
 /// Looking downward at the city ascends the hoverboard, rewarding the patient for confronting the height.
 /// Looking away for longer than wait time causes the hoverboard to gently descend until the patient refocuses.
-/// Supports both OpenXR head tracking and desktop mouse/keyboard look (Right-click drag, mouse move, Up/Down arrows).
-/// Employs controlled kinematic positioning to guarantee no freefall drops, zero physics jitter, and no velocity warnings.
+/// Supports both OpenXR head tracking and desktop mouse/keyboard look.
+/// Employs critically damped spring physics (Mathf.SmoothDamp) and aerodynamic micro-buoyancy
+/// to eliminate abrupt linear starts/stops and give the hoverboard tactile physical presence.
 /// </summary>
 public class vrlook : MonoBehaviour
 {
@@ -60,6 +61,12 @@ public class vrlook : MonoBehaviour
     private const float MIN_HOVERBOARD_Y = 32.0f;
     private const float MAX_HOVERBOARD_Y = 360.0f;
 
+    // Kinematic spring physics & aerodynamic buoyancy
+    private float _baseAltitude = 32.0f;
+    private float _currentVelocityY = 0f;
+    private float _targetVelocityY = 0f;
+    private float _velSmoothingVelocity = 0f;
+
     // Desktop pitch/yaw tracking
     private float _cameraPitch = 0f;
     private float _hoverYaw = 45f;
@@ -101,16 +108,16 @@ public class vrlook : MonoBehaviour
         }
 
         // Initialize position in open avenue (298, 32, 86) with clear airspace and wide clearance from building walls
-        transform.position = new Vector3(CENTER_SPAWN_X, Mathf.Max(transform.position.y, MIN_HOVERBOARD_Y), CENTER_SPAWN_Z);
+        _baseAltitude = Mathf.Max(transform.position.y, MIN_HOVERBOARD_Y);
+        transform.position = new Vector3(CENTER_SPAWN_X, _baseAltitude, CENTER_SPAWN_Z);
         transform.rotation = Quaternion.Euler(0f, 45f, 0f);
         _hoverYaw = 45f;
 
-        ValChange.hf = (int)transform.position.y;
-        ValChange.HighestHigh = transform.position.y;
+        ValChange.hf = (int)_baseAltitude;
+        ValChange.HighestHigh = _baseAltitude;
         endingstate = 0;
         e = 0;
         started = 0;
-
     }
 
     void Update()
@@ -122,7 +129,7 @@ public class vrlook : MonoBehaviour
 
         if (TherapyAudioManager.HasInstance && TherapyAudioManager.Instance != null)
         {
-            TherapyAudioManager.Instance.SetAcrophobiaAltitude(transform.position.y);
+            TherapyAudioManager.Instance.SetAcrophobiaAltitude(_baseAltitude);
         }
 
         bool soundEnabled = TherapySettingsManager.Instance == null || TherapySettingsManager.Instance.acroSoundEnabled;
@@ -159,8 +166,6 @@ public class vrlook : MonoBehaviour
                 SeeingDown = false;
             }
 
-            float currentY = transform.position.y;
-
             if (SeeingDown)
             {
                 // Looking down at the city
@@ -170,8 +175,12 @@ public class vrlook : MonoBehaviour
                 {
                     started = 1;
                     k = 0;
-                    // Ascend smoothly towards summit
-                    currentY += speed * Time.deltaTime;
+                    // Target upward speed
+                    _targetVelocityY = speed;
+                }
+                else
+                {
+                    _targetVelocityY = 0f;
                 }
             }
             else
@@ -179,29 +188,42 @@ public class vrlook : MonoBehaviour
                 // Looking away / resting
                 TimePtStartseeingdown = Tim;
 
-                if (Timer >= Timeg && currentY > MIN_HOVERBOARD_Y)
+                if (Timer >= Timeg && _baseAltitude > MIN_HOVERBOARD_Y)
                 {
                     k = 0;
-                    // Controlled gentle descent
-                    currentY -= 1.0f * Time.deltaTime;
+                    // Target controlled gentle descent
+                    _targetVelocityY = -1.0f;
                 }
                 else
                 {
                     k = 1; // holding steady
+                    _targetVelocityY = 0f;
                 }
             }
 
-            // Clamping bounds
-            currentY = Mathf.Clamp(currentY, MIN_HOVERBOARD_Y, MAX_HOVERBOARD_Y);
-            transform.position = new Vector3(CENTER_SPAWN_X, currentY, CENTER_SPAWN_Z);
+            // Critically damped spring interpolation on vertical velocity:
+            // Eliminates sudden instant starts and abrupt stops, giving the platform felt mass and inertia
+            _currentVelocityY = Mathf.SmoothDamp(_currentVelocityY, _targetVelocityY, ref _velSmoothingVelocity, 0.45f);
+            _baseAltitude += _currentVelocityY * Time.deltaTime;
+            _baseAltitude = Mathf.Clamp(_baseAltitude, MIN_HOVERBOARD_Y, MAX_HOVERBOARD_Y);
 
-            ValChange.hf = (int)currentY;
-            ValChange.HighestHigh = Mathf.Max(ValChange.HighestHigh, currentY);
+            // Calibrated aerodynamic micro-buoyancy:
+            // Microscopic vertical breathing float (~1.2cm) and subtle angular sway (<0.18°)
+            // conveys floating suspended in air rather than being bolted to an invisible steel pole
+            float hoverFloat = Mathf.Sin(Time.time * 2.1f) * 0.012f + (Mathf.PerlinNoise(Time.time * 0.5f, 15f) - 0.5f) * 0.006f;
+            float pitchSway = (Mathf.PerlinNoise(Time.time * 0.35f, 5f) - 0.5f) * 0.28f;
+            float rollSway = (Mathf.PerlinNoise(10f, Time.time * 0.35f) - 0.5f) * 0.28f;
+
+            transform.position = new Vector3(CENTER_SPAWN_X, _baseAltitude + hoverFloat, CENTER_SPAWN_Z);
+            transform.rotation = Quaternion.Euler(pitchSway, _hoverYaw, rollSway);
+
+            ValChange.hf = (int)_baseAltitude;
+            ValChange.HighestHigh = Mathf.Max(ValChange.HighestHigh, _baseAltitude);
             PatientSessionManager.Instance.UpdatePeakMetric(ValChange.HighestHigh);
 
             tlast = Tim;
 
-            if (currentY >= MAX_HOVERBOARD_Y && PatientSessionManager.Instance.GetCurrentSessionDuration() > 20f)
+            if (_baseAltitude >= MAX_HOVERBOARD_Y && PatientSessionManager.Instance.GetCurrentSessionDuration() > 20f)
             {
                 if (Max != null)
                 {
@@ -262,14 +284,13 @@ public class vrlook : MonoBehaviour
         if (Mathf.Abs(mouseX) > 0.01f)
         {
             _hoverYaw += mouseX;
-            transform.rotation = Quaternion.Euler(0f, _hoverYaw, 0f);
         }
     }
 
     private void PlayAmbientSounds()
     {
         // Gentle distant traffic cues down at street level (only below 100m, never sudden loud horn honks in ear)
-        if (Tim - lastplay > 12f && transform.position.y < 100f)
+        if (Tim - lastplay > 12f && _baseAltitude < 100f)
         {
             int i = Random.Range(1, 4);
             AudioClip clip = i switch

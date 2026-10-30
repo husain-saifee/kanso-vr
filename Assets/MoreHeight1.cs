@@ -4,7 +4,8 @@ using DePhobia.Core;
 /// <summary>
 /// Controls water elevation dynamics in the Aquaphobia simulation.
 /// Connects water rise speed, interval, and duration to TherapySettingsManager,
-/// and couples elevation to TherapyAudioManager for physical submersion acoustics.
+/// and provides smooth sinusoidal tide elevation, fluid surface tension oscillation,
+/// and physical submersion acoustics via TherapyAudioManager.
 /// </summary>
 public class MoreHeight1 : MonoBehaviour
 {
@@ -22,10 +23,14 @@ public class MoreHeight1 : MonoBehaviour
     private int flag = 0;
     private int flag1 = 1;
 
+    private float _baseWaterY = 0f;
+    private const float MAX_WATER_Y = 1.75f;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         tstart = Time.time;
+        _baseWaterY = transform.position.y;
 
         var sm = TherapySettingsManager.Instance;
         speed = (sm != null) ? sm.aquaWaterSpeed : 0.06f;
@@ -38,48 +43,53 @@ public class MoreHeight1 : MonoBehaviour
         time = Time.time - tstart;
 
         // Continually update submersion acoustics in TherapyAudioManager
-        float relativeSubmersion = Mathf.InverseLerp(0.0f, 1.70f, transform.position.y);
+        float relativeSubmersion = Mathf.InverseLerp(0.0f, 1.70f, _baseWaterY);
         if (TherapyAudioManager.HasInstance && TherapyAudioManager.Instance != null)
         {
             TherapyAudioManager.Instance.SetWaterSubmersion(relativeSubmersion);
         }
 
-        if (transform.position.y < 1.8f)
+        if (_baseWaterY < MAX_WATER_Y)
         {
             if (flag1 == 1 && (time - mstart) >= timerate)
             {
-                if (rb != null && !rb.isKinematic)
-                {
-                    rb.velocity = new Vector3(0, speed, 0);
-                }
-                else
-                {
-                    transform.position += new Vector3(0, speed * Time.deltaTime, 0);
-                }
                 vstart = time;
                 flag = 1;
                 flag1 = 0;
 
-                // Play gentle shore/water lap sound when water elevation begins rising
+                // Play gentle shore/water lap sound when tide elevation begins surging
                 if (TherapyAudioManager.HasInstance && TherapyAudioManager.Instance != null)
                 {
                     TherapyAudioManager.Instance.PlayWaterLap(0.40f);
                 }
             }
 
-            if (flag == 1 && (time - vstart >= vtime))
+            if (flag == 1)
             {
-                if (rb != null && !rb.isKinematic) rb.velocity = Vector3.zero;
-                flag = 0;
-                mstart = time;
-                flag1 = 1;
+                float elapsedInInterval = time - vstart;
+                if (elapsedInInterval <= vtime)
+                {
+                    // Smooth sinusoidal bell-curve velocity (eases in, peaks, eases out)
+                    float intervalProgress = Mathf.Clamp01(elapsedInInterval / vtime);
+                    float smoothVelFactor = Mathf.Sin(intervalProgress * Mathf.PI) * 1.4f + 0.2f;
+                    _baseWaterY += speed * smoothVelFactor * Time.deltaTime;
+                    _baseWaterY = Mathf.Min(_baseWaterY, MAX_WATER_Y);
+                }
+                else
+                {
+                    flag = 0;
+                    mstart = time;
+                    flag1 = 1;
+                }
             }
+
             tmeas = time;
-            PatientSessionManager.Instance.UpdatePeakMetric(transform.position.y);
+            PatientSessionManager.Instance.UpdatePeakMetric(_baseWaterY);
         }
-        else
-        {
-            if (rb != null && !rb.isKinematic) rb.velocity = Vector3.zero;
-        }
+
+        // Calibrated fluid surface tension:
+        // Gentle micro-tide swell (approx 8mm) gives the ocean physical breathing presence
+        float surfaceTide = Mathf.Sin(Time.time * 1.6f) * 0.007f + Mathf.Cos(Time.time * 2.4f) * 0.004f;
+        transform.position = new Vector3(transform.position.x, _baseWaterY + surfaceTide, transform.position.z);
     }
 }
