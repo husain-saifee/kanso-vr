@@ -9,10 +9,11 @@ namespace DePhobia.VR
     /// <summary>
     /// In-game floating pause menu: Strict Minimalist Two-Button Slate.
     /// Styled under Forest Mineral & Sage with zero blue or violet tones.
+    /// Arrives and dismisses organically via spring physics (VRSpringCanvas),
+    /// and provides tactile 3D button depression with physical haptic and acoustic confirmation.
     /// Focused purely on the user's primary choices:
     /// 1. "Resume Session" (Prominent Matcha Sage)
     /// 2. "Return to Menu" (Gentle Umber Clay)
-    /// Recenter and seated toggles remain accessible via Right Thumbstick click or 'R' key.
     /// </summary>
     public class VRInGamePauseMenu : MonoBehaviour
     {
@@ -41,6 +42,7 @@ namespace DePhobia.VR
             }
             else
             {
+                VRSpringCanvas.Attach(pauseCanvas);
                 pauseCanvas.SetActive(false);
             }
         }
@@ -97,7 +99,8 @@ namespace DePhobia.VR
             if (pauseCanvas != null)
             {
                 PositionCanvasInFrontOfPlayer();
-                pauseCanvas.SetActive(true);
+                var spring = VRSpringCanvas.Attach(pauseCanvas);
+                spring.Arrive();
             }
 
             var rig = FindObjectOfType<VRPlayerRig>();
@@ -114,7 +117,15 @@ namespace DePhobia.VR
 
             if (pauseCanvas != null)
             {
-                pauseCanvas.SetActive(false);
+                var spring = pauseCanvas.GetComponent<VRSpringCanvas>();
+                if (spring != null)
+                {
+                    spring.Dismiss();
+                }
+                else
+                {
+                    pauseCanvas.SetActive(false);
+                }
             }
 
             var rig = FindObjectOfType<VRPlayerRig>();
@@ -213,6 +224,7 @@ namespace DePhobia.VR
             hRect.sizeDelta = new Vector2(400, 20);
 
             pauseCanvas = canvasObj;
+            VRSpringCanvas.Attach(pauseCanvas);
             pauseCanvas.SetActive(false);
         }
 
@@ -231,6 +243,9 @@ namespace DePhobia.VR
             var btnRect = btnObj.GetComponent<RectTransform>();
             btnRect.anchoredPosition = pos;
             btnRect.sizeDelta = new Vector2(340, 48);
+
+            // Endow with 3D tactile depression and haptic feedback
+            ThemeTokens.StyleButtonColors(btn, btnColor, btnColor * 1.12f, btnColor * 0.88f);
 
             var text = ThemeTokens.CreateLabel(btnObj.transform, "Text", label, 16, ThemeTokens.TextPrimary, TextAlignmentOptions.Center, bold);
             var textRect = text.GetComponent<RectTransform>();

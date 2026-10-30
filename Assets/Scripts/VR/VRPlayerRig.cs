@@ -8,7 +8,7 @@ namespace DePhobia.VR
     /// Unified modern OpenXR Player Rig for DePhobia.
     /// Provides dual-input locomotion (VR controllers + desktop WASD fallback),
     /// snap/smooth turning, comfort vignette, seated mode recalibration,
-    /// haptic feedback, and gaze pitch tracking.
+    /// haptic feedback, gaze pitch tracking, and spatial reticle anchoring.
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
     public class VRPlayerRig : MonoBehaviour
@@ -35,6 +35,9 @@ namespace DePhobia.VR
         public VRComfortVignette comfortVignette;
         public VRInGamePauseMenu pauseMenu;
 
+        [Header("Spatial Reticle & Interaction Anchor")]
+        public VRSpatialReticle spatialReticle;
+
         private CharacterController _characterController;
         private Vector3 _velocity;
         private bool _snapTurnCooldown = false;
@@ -53,8 +56,6 @@ namespace DePhobia.VR
                 if (cam != null) headCamera = cam.transform;
             }
 
-
-
             if (pauseMenu == null)
             {
                 pauseMenu = GetComponentInChildren<VRInGamePauseMenu>();
@@ -62,6 +63,18 @@ namespace DePhobia.VR
                 {
                     pauseMenu = gameObject.AddComponent<VRInGamePauseMenu>();
                     pauseMenu.vrCamera = headCamera;
+                }
+            }
+
+            if (spatialReticle == null)
+            {
+                spatialReticle = GetComponentInChildren<VRSpatialReticle>();
+                if (spatialReticle == null)
+                {
+                    var reticleGo = new GameObject("VRSpatialReticle");
+                    reticleGo.transform.SetParent(headCamera != null ? headCamera : transform, false);
+                    spatialReticle = reticleGo.AddComponent<VRSpatialReticle>();
+                    spatialReticle.rayOrigin = headCamera != null ? headCamera : transform;
                 }
             }
 
@@ -238,8 +251,6 @@ namespace DePhobia.VR
             {
                 _characterController.Move(moveDirection * (moveSpeed * Time.deltaTime));
             }
-
-
         }
 
         private void HandleGravity()

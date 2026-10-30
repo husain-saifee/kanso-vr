@@ -12,7 +12,7 @@ namespace DePhobia.VR
     /// Styled under Forest Mineral & Sage with zero blue or violet tones.
     /// Start Ritual: Non-blocking; provides 3-breath ambient pacing and starts on gaze forward or tap.
     /// End Ritual: Stops the session and presents a calm Session Review card with data readout,
-    /// giving the patient two clear interactive choices: [ Restart Session ] or [ Return to Main Menu ].
+    /// arriving through organic spring physics (VRSpringCanvas) and featuring tactile 3D buttons.
     /// </summary>
     public class TherapySessionRitual : MonoBehaviour
     {
@@ -140,6 +140,12 @@ namespace DePhobia.VR
             var rig = FindObjectOfType<VRPlayerRig>();
             if (rig != null) rig.SendHapticImpulse(0.25f, 0.08f, UnityEngine.XR.XRNode.RightHand);
 
+            if (_ritualCanvas != null)
+            {
+                var spring = _ritualCanvas.GetComponent<VRSpringCanvas>();
+                if (spring != null) spring.Dismiss();
+            }
+
             if (_onRestartCompleted != null)
             {
                 _onRestartCompleted.Invoke();
@@ -175,6 +181,12 @@ namespace DePhobia.VR
 
             var rig = FindObjectOfType<VRPlayerRig>();
             if (rig != null) rig.SendHapticImpulse(0.3f, 0.10f, UnityEngine.XR.XRNode.RightHand);
+
+            if (_ritualCanvas != null)
+            {
+                var spring = _ritualCanvas.GetComponent<VRSpringCanvas>();
+                if (spring != null) spring.Dismiss();
+            }
 
             if (_onEndCompleted != null)
             {
@@ -319,6 +331,9 @@ namespace DePhobia.VR
             var retBtRect = retBtnText.GetComponent<RectTransform>();
             retBtRect.anchorMin = Vector2.zero; retBtRect.anchorMax = Vector2.one;
             retBtRect.offsetMin = Vector2.zero; retBtRect.offsetMax = Vector2.zero;
+
+            // Attach spring arrival physics: smoothly scales and settles from 88% scale
+            VRSpringCanvas.Attach(_ritualCanvas).Arrive();
         }
     }
 }

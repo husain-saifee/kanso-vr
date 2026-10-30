@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using DePhobia.VR;
 
 namespace DePhobia.Core
 {
@@ -8,6 +9,7 @@ namespace DePhobia.Core
     /// Source of truth for the "Forest Mineral & Sage" visual language.
     /// Strictly guarantees zero blue or violet tones across all surfaces and states.
     /// High-contrast, WCAG AAA compliant (14.2:1 text contrast), restrained and composed.
+    /// Integrates tactile 3D button depression and haptic feedback across all interactables.
     /// </summary>
     public static class ThemeTokens
     {
@@ -61,6 +63,20 @@ namespace DePhobia.Core
             cb.selectedColor = normal;
             cb.disabledColor = new Color(normal.r, normal.g, normal.b, 0.35f);
             btn.colors = cb;
+
+            // Automatically endow with physical 3D depression and point-of-contact haptics
+            MakeTactile(btn);
+        }
+
+        public static VRTactileButton MakeTactile(Button btn)
+        {
+            if (btn == null) return null;
+            var tactile = btn.GetComponent<VRTactileButton>();
+            if (tactile == null)
+            {
+                tactile = btn.gameObject.AddComponent<VRTactileButton>();
+            }
+            return tactile;
         }
 
         public static TextMeshProUGUI CreateLabel(Transform parent, string name, string text, float size, Color color, TextAlignmentOptions align = TextAlignmentOptions.Center, bool bold = false)
