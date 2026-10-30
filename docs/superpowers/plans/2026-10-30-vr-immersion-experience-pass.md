@@ -48,24 +48,24 @@
 **Files:**
 - Modify: `Assets/vrlook.cs`
 
-- [ ] **Step 1:** Replace instant linear ascent/descent (`currentY += speed * Time.deltaTime`) with critically damped spring interpolation (`Mathf.SmoothDamp`).
-- [ ] **Step 2:** Add microscopic aerodynamic hover buoyancy (gentle 1.2cm vertical breathing oscillation and smooth <0.18° roll/pitch sway via Perlin noise) to convey floating in open air without vestibular discomfort.
-- [ ] **Step 3:** Implement organic gaze-away deceleration (settle to a soft stop over 0.6s rather than hard braking).
+- [x] **Step 1:** Replace instant linear ascent/descent (`currentY += speed * Time.deltaTime`) with critically damped spring interpolation (`Mathf.SmoothDamp`).
+- [x] **Step 2:** Add microscopic aerodynamic hover buoyancy (gentle 1.2cm vertical breathing oscillation and smooth <0.18° roll/pitch sway via Perlin noise) to convey floating in open air without vestibular discomfort.
+- [x] **Step 3:** Implement organic gaze-away deceleration (settle to a soft stop over 0.6s rather than hard braking).
 
 ### Task 2.2: Claustrophobia Structural Resistance & Wall Deceleration
 **Files:**
 - Modify: `Assets/Room/Scripts/xposmove.cs`
 - Modify: `Assets/Room/Scripts/xnegmove.cs`
 
-- [ ] **Step 1:** Replace constant velocity clamping with smooth deceleration curve as walls reach safe clamping limit (`-2.85m`).
-- [ ] **Step 2:** Link wall movement velocity to `TherapyAudioManager.SetRoomProximity` and trigger subtle mechanical friction / structural creak audio during travel.
+- [x] **Step 1:** Replace constant velocity clamping with smooth deceleration curve as walls reach safe clamping limit (`-2.85m`).
+- [x] **Step 2:** Link wall movement velocity to `TherapyAudioManager.SetRoomProximity` and trigger subtle mechanical friction / structural creak audio during travel.
 
 ### Task 2.3: Aquaphobia Water Tension & Wave Lap
 **Files:**
 - Modify: `Assets/MoreHeight1.cs`
 
-- [ ] **Step 1:** Replace stepped velocity jumps with gentle sinusoidal tide modulation on vertical rise.
-- [ ] **Step 2:** Hook water elevation to `TherapyAudioManager.SetWaterSubmersion` to smoothly trigger spatial shore lap sound when water crosses player ankle/knee threshold.
+- [x] **Step 1:** Replace stepped velocity jumps with gentle sinusoidal tide modulation on vertical rise.
+- [x] **Step 2:** Hook water elevation to `TherapyAudioManager.SetWaterSubmersion` to smoothly trigger spatial shore lap sound when water crosses player ankle/knee threshold.
 
 ---
 
