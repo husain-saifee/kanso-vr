@@ -8,8 +8,10 @@ using DePhobia.Core;
 namespace DePhobia.VR
 {
     /// <summary>
-    /// Provides smooth screen fades in VR during scene transitions and teleports
-    /// to prevent visual jarring and simulation sickness.
+    /// Provides cinema fades with environmental audio pre-roll in VR.
+    /// Eliminates visual cuts and simulation sickness, and ensures the ears perceive
+    /// destination room acoustics (350ms pre-roll) before the eyes see the world,
+    /// maintaining continuous 432Hz harmonic bed audio throughout.
     /// </summary>
     public class VRFadeManager : MonoBehaviour
     {
@@ -106,20 +108,93 @@ namespace DePhobia.VR
 
         public void FadeAndLoadScene(int sceneIndex, float duration = 0.5f)
         {
-            FadeOut(duration, () =>
-            {
-                SceneManager.LoadScene(sceneIndex);
-                FadeIn(duration);
-            });
+            if (_currentFadeRoutine != null) StopCoroutine(_currentFadeRoutine);
+            _currentFadeRoutine = StartCoroutine(TransitionWithAudioPreRollRoutine(sceneIndex, duration));
         }
 
         public void FadeAndLoadScene(string sceneName, float duration = 0.5f)
         {
-            FadeOut(duration, () =>
+            if (_currentFadeRoutine != null) StopCoroutine(_currentFadeRoutine);
+            _currentFadeRoutine = StartCoroutine(TransitionWithAudioPreRollRoutine(sceneName, duration));
+        }
+
+        private IEnumerator TransitionWithAudioPreRollRoutine(int sceneIndex, float duration)
+        {
+            yield return FadeRoutine(0f, 1f, duration, null);
+
+            SceneManager.LoadScene(sceneIndex);
+            yield return null; // Wait one frame for scene activation
+
+            if (Camera.main != null && _fadeCanvas != null)
             {
-                SceneManager.LoadScene(sceneName);
-                FadeIn(duration);
-            });
+                _fadeCanvas.worldCamera = Camera.main;
+            }
+
+            // Environmental Audio Pre-Roll: Destination room acoustics fade in before sight
+            string scenario = GetScenarioNameForScene(sceneIndex);
+            if (TherapyAudioManager.HasInstance && TherapyAudioManager.Instance != null)
+            {
+                TherapyAudioManager.Instance.PlayScenarioAmbience(scenario);
+            }
+
+            // 350ms acoustic pre-roll hold in blackout
+            float preRollTimer = 0f;
+            while (preRollTimer < 0.35f)
+            {
+                preRollTimer += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            // Visual reveal
+            yield return FadeRoutine(1f, 0f, duration, null);
+        }
+
+        private IEnumerator TransitionWithAudioPreRollRoutine(string sceneName, float duration)
+        {
+            yield return FadeRoutine(0f, 1f, duration, null);
+
+            SceneManager.LoadScene(sceneName);
+            yield return null; // Wait one frame for scene activation
+
+            if (Camera.main != null && _fadeCanvas != null)
+            {
+                _fadeCanvas.worldCamera = Camera.main;
+            }
+
+            string scenario = GetScenarioNameForScene(sceneName);
+            if (TherapyAudioManager.HasInstance && TherapyAudioManager.Instance != null)
+            {
+                TherapyAudioManager.Instance.PlayScenarioAmbience(scenario);
+            }
+
+            float preRollTimer = 0f;
+            while (preRollTimer < 0.35f)
+            {
+                preRollTimer += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            yield return FadeRoutine(1f, 0f, duration, null);
+        }
+
+        private string GetScenarioNameForScene(int buildIndex)
+        {
+            switch (buildIndex)
+            {
+                case 1: return "Claustrophobia";
+                case 2: return "Aquaphobia";
+                case 3: return "Acrophobia";
+                default: return "Menu";
+            }
+        }
+
+        private string GetScenarioNameForScene(string sceneName)
+        {
+            string s = sceneName.ToLowerInvariant();
+            if (s.Contains("room") || s.Contains("revelation") || s.Contains("claus")) return "Claustrophobia";
+            if (s.Contains("island") || s.Contains("beach") || s.Contains("aqua") || s.Contains("water")) return "Aquaphobia";
+            if (s.Contains("geopipe") || s.Contains("demo") || s.Contains("acro") || s.Contains("elevation")) return "Acrophobia";
+            return "Menu";
         }
 
         private void StartFade(float fromAlpha, float toAlpha, float duration, Action onComplete)
