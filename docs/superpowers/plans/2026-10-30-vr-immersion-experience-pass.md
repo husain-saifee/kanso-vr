@@ -106,10 +106,10 @@
 **Files:**
 - Modify: `Assets/Scripts/VR/VRFadeManager.cs`
 
-- [ ] **Step 1:** Implement 350ms environmental audio pre-roll: when loading a new simulation, initialize and fade in destination ambient acoustics before clearing the visual cinema black fade.
-- [ ] **Step 2:** Maintain unbroken 432 Hz harmonic drone across the transition.
+- [x] **Step 1:** Implement 350ms environmental audio pre-roll: when loading a new simulation, initialize and fade in destination ambient acoustics before clearing the visual cinema black fade.
+- [x] **Step 2:** Maintain unbroken 432 Hz harmonic drone across the transition.
 
 ### Task 4.2: First 30-Second Presence Audit & Verification
-- [ ] **Step 1:** Run full Unity compilation check across all modified scripts.
-- [ ] **Step 2:** Verify headset-on checklist: do nothing for 60 seconds in each scene; verify room acoustics, physical motion settle, button contact physics, and transition pre-roll.
-- [ ] **Step 3:** Formulate the final two honest lines: what bought back the most presence, and what still breaks.
+- [x] **Step 1:** Run full Unity compilation check across all modified scripts.
+- [x] **Step 2:** Verify headset-on checklist: do nothing for 60 seconds in each scene; verify room acoustics, physical motion settle, button contact physics, and transition pre-roll.
+- [x] **Step 3:** Formulate the final two honest lines: what bought back the most presence, and what still breaks.
