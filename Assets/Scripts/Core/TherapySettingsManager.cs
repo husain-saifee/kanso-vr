@@ -80,6 +80,8 @@ namespace DePhobia.Core
         public bool seatedMode = false;
         [Tooltip("Seated eye height offset in meters")]
         public float seatedHeightOffset = 0.35f;
+        [Tooltip("Anti-Aliasing MSAA Level (2 for 2x Standard, 4 for 4x Crisp)")]
+        public int msaaLevel = 2;
 
         [Header("Audio & Accessibility")]
         [Tooltip("Master audio volume [0..1]")]
@@ -267,6 +269,13 @@ namespace DePhobia.Core
             SaveSettings();
         }
 
+        public void SetMsaaLevel(int level)
+        {
+            msaaLevel = (level == 4) ? 4 : 2;
+            QualitySettings.antiAliasing = msaaLevel;
+            SaveSettings();
+        }
+
         public void SetHighContrast(bool enabled)
         {
             highContrast = enabled;
@@ -366,6 +375,7 @@ namespace DePhobia.Core
             PlayerPrefs.SetInt("ComfortVignette", comfortVignetteEnabled ? 1 : 0);
             PlayerPrefs.SetInt("SeatedMode", seatedMode ? 1 : 0);
             PlayerPrefs.SetFloat("SeatedHeightOffset", seatedHeightOffset);
+            PlayerPrefs.SetInt("MSAALevel", msaaLevel);
 
             PlayerPrefs.SetFloat("MasterVolume", masterVolume);
             PlayerPrefs.SetFloat("AmbienceVolume", ambienceVolume);
@@ -399,6 +409,8 @@ namespace DePhobia.Core
             comfortVignetteEnabled = PlayerPrefs.GetInt("ComfortVignette", 0) == 1;
             seatedMode = PlayerPrefs.GetInt("SeatedMode", 0) == 1;
             seatedHeightOffset = PlayerPrefs.GetFloat("SeatedHeightOffset", 0.35f);
+            msaaLevel = PlayerPrefs.GetInt("MSAALevel", 2);
+            QualitySettings.antiAliasing = msaaLevel;
 
             masterVolume = PlayerPrefs.GetFloat("MasterVolume", 0.9f);
             ambienceVolume = PlayerPrefs.GetFloat("AmbienceVolume", 0.75f);

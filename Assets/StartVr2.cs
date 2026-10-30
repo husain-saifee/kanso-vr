@@ -15,6 +15,7 @@ public class StartVr2 : MonoBehaviour
     private void Start()
     {
         PatientSessionManager.Instance.StartSession("Aquaphobia");
+        TherapyAudioManager.Instance.PlayScenarioAmbience("Aquaphobia");
 
         // Enable atmospheric coastal distance fog (Aquaphobia only)
         RenderSettings.fog = false;
@@ -133,6 +134,7 @@ public class StartVr2 : MonoBehaviour
     public void SaveAndReturn(bool completed = false)
     {
         RenderSettings.fog = false;
+        TherapyAudioManager.Instance.PlayScenarioAmbience("Menu");
         string summary = $"WaterSpeed: {TherapySettingsManager.Instance.aquaWaterSpeed:F3}, WaterRiseAfter: {TherapySettingsManager.Instance.aquaRiseAfter:F1}s";
         PatientSessionManager.Instance.EndAndSaveSession(completed: completed, extraParams: summary);
         VRFadeManager.Instance.FadeAndLoadScene(0, 0.5f);

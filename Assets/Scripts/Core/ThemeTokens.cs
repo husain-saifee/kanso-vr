@@ -74,6 +74,7 @@ namespace DePhobia.Core
             tmp.alignment = align;
             if (bold) tmp.fontStyle = FontStyles.Bold;
             tmp.raycastTarget = false;
+            tmp.extraPadding = true;
             return tmp;
         }
     }

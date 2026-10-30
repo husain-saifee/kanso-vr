@@ -48,37 +48,68 @@ public class ValChange : MonoBehaviour
             hi = (int)cam.transform.position.y;
         }
 
-        // Ensure HUD telemetry Canvas and elements are fully active and legible
+        // Ensure HUD telemetry Canvas and elements are visible, compact, and semi-transparent
+        Color semiWhite = new Color(ThemeTokens.TextPrimary.r, ThemeTokens.TextPrimary.g, ThemeTokens.TextPrimary.b, 0.55f);
+        Color semiSage = new Color(ThemeTokens.AccentSage.r, ThemeTokens.AccentSage.g, ThemeTokens.AccentSage.b, 0.55f);
+
         if (Timeobj != null)
         {
             timee = Timeobj.GetComponent<TextMeshProUGUI>();
             Timeobj.SetActive(true);
-            if (timee != null) timee.color = ThemeTokens.TextPrimary;
+            if (timee != null)
+            {
+                timee.color = semiWhite;
+                timee.fontSize = Mathf.Min(timee.fontSize, 18f);
+                timee.extraPadding = true;
+            }
         }
 
         if (Heigh != null)
         {
             heig = Heigh.GetComponent<TextMeshProUGUI>();
             Heigh.SetActive(true);
-            if (heig != null) heig.color = ThemeTokens.AccentSage;
+            if (heig != null)
+            {
+                heig.color = semiSage;
+                heig.fontSize = Mathf.Min(heig.fontSize, 18f);
+                heig.extraPadding = true;
+            }
         }
 
         if (focusnf != null)
         {
             focun = focusnf.GetComponent<TextMeshProUGUI>();
             focusnf.SetActive(true);
+            if (focun != null)
+            {
+                focun.color = semiWhite;
+                focun.fontSize = Mathf.Min(focun.fontSize, 18f);
+                focun.extraPadding = true;
+            }
         }
 
         if (waitstill != null)
         {
             waisti = waitstill.GetComponent<TextMeshProUGUI>();
             waitstill.SetActive(true);
+            if (waisti != null)
+            {
+                waisti.color = semiWhite;
+                waisti.fontSize = Mathf.Min(waisti.fontSize, 18f);
+                waisti.extraPadding = true;
+            }
         }
 
         if (Headwait != null)
         {
             headait = Headwait.GetComponent<TextMeshProUGUI>();
             Headwait.SetActive(true);
+            if (headait != null)
+            {
+                headait.color = semiWhite;
+                headait.fontSize = Mathf.Min(headait.fontSize, 18f);
+                headait.extraPadding = true;
+            }
         }
 
         // Activate parent canvas and ensure telemetry labels (Time, Height, etc.) are visible
@@ -179,6 +210,7 @@ public class ValChange : MonoBehaviour
             2 => ThemeTokens.AccentSage,
             _ => ThemeTokens.TextPrimary
         };
+        targetColor.a = 0.55f; // Semi-transparent to keep view unobstructed
 
         if (waisti != null) waisti.color = targetColor;
         if (headait != null) headait.color = targetColor;

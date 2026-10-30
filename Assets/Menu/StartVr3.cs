@@ -16,6 +16,7 @@ public class StartVr3 : MonoBehaviour
     private void Start()
     {
         PatientSessionManager.Instance.StartSession("Acrophobia");
+        TherapyAudioManager.Instance.PlayScenarioAmbience("Acrophobia");
 
         // 1. Configure baseline Acrophobia atmospheric distance fog
         EnableAcrophobiaDistanceFog();
@@ -211,6 +212,7 @@ public class StartVr3 : MonoBehaviour
     public void SaveAndReturn()
     {
         RenderSettings.fog = false;
+        TherapyAudioManager.Instance.PlayScenarioAmbience("Menu");
         bool completed = (vrlook.e == 1);
         string summary = $"WaitTime: {TherapySettingsManager.Instance.acroWaitTime:F1}s, FocusTime: {TherapySettingsManager.Instance.acroStillFocusTime:F1}s, PeakAltitude: {ValChange.HighestHigh:F1}m";
 

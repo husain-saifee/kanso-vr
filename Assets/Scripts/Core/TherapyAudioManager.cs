@@ -55,7 +55,12 @@ namespace DePhobia.Core
         public static event Action<string, float> OnCaptionRequested;
 
         private AudioSource _ambientSource;
+        private AudioSource _scenarioSource;
+        private AudioSource _windSource;
         private AudioSource _feedbackSource;
+
+        private string _currentScenario = "Menu";
+        private float _lastAltitude = 32f;
 
         private void Awake()
         {
@@ -73,21 +78,50 @@ namespace DePhobia.Core
 
         private void SetupAudioSources()
         {
+            // 1. Therapeutic Background Meditation Music (2D Binaural Bed)
             _ambientSource = gameObject.AddComponent<AudioSource>();
             _ambientSource.loop = true;
             _ambientSource.playOnAwake = false;
-            _ambientSource.spatialBlend = 0f; // 2D binaural bed
-            _ambientSource.volume = 0.45f;
+            _ambientSource.spatialBlend = 0f;
+            _ambientSource.volume = 0.40f;
 
+            AudioClip meditationClip = Resources.Load<AudioClip>("Audio/ambient_meditation");
+            if (meditationClip != null)
+            {
+                _ambientSource.clip = meditationClip;
+            }
+            else
+            {
+                _ambientSource.clip = CreateHarmonicAmbientClip(8.0f);
+            }
+            _ambientSource.Play();
+
+            // 2. Realistic Environmental Spatial Ambience (City, Waves, Room tone)
+            _scenarioSource = gameObject.AddComponent<AudioSource>();
+            _scenarioSource.loop = true;
+            _scenarioSource.playOnAwake = false;
+            _scenarioSource.spatialBlend = 0.35f;
+            _scenarioSource.volume = 0.45f;
+
+            // 3. High-Altitude Modulated Wind Source
+            _windSource = gameObject.AddComponent<AudioSource>();
+            _windSource.loop = true;
+            _windSource.playOnAwake = false;
+            _windSource.spatialBlend = 0.25f;
+            _windSource.volume = 0.05f;
+
+            AudioClip windClip = Resources.Load<AudioClip>("Audio/wind_altitude");
+            if (windClip != null)
+            {
+                _windSource.clip = windClip;
+            }
+
+            // 4. UI Audio Feedback
             _feedbackSource = gameObject.AddComponent<AudioSource>();
             _feedbackSource.loop = false;
             _feedbackSource.playOnAwake = false;
             _feedbackSource.spatialBlend = 0f;
             _feedbackSource.volume = 0.6f;
-
-            // Generate procedural calm ambient loop (warm 432Hz harmonic pad)
-            _ambientSource.clip = CreateHarmonicAmbientClip(8.0f);
-            _ambientSource.Play();
         }
 
         private void Start()
@@ -107,12 +141,106 @@ namespace DePhobia.Core
                 AudioListener.volume = sm.masterVolume;
                 if (_ambientSource != null)
                 {
-                    _ambientSource.volume = sm.ambienceVolume * 0.5f;
+                    _ambientSource.volume = sm.ambienceVolume * 0.45f;
                 }
                 if (_feedbackSource != null)
                 {
                     _feedbackSource.volume = sm.feedbackVolume * 0.7f;
                 }
+                UpdateScenarioVolumes();
+            }
+        }
+
+        /// <summary>
+        /// Transitions the environmental audio layer to the active exposure scenario.
+        /// </summary>
+        public void PlayScenarioAmbience(string scenarioName)
+        {
+            _currentScenario = scenarioName;
+
+            switch (scenarioName.ToLowerInvariant())
+            {
+                case "claustrophobia":
+                case "enclosed space":
+                    if (_windSource != null && _windSource.isPlaying) _windSource.Stop();
+                    AudioClip roomClip = Resources.Load<AudioClip>("Audio/room_ventilation");
+                    if (roomClip != null && _scenarioSource != null)
+                    {
+                        _scenarioSource.clip = roomClip;
+                        _scenarioSource.Play();
+                    }
+                    break;
+
+                case "aquaphobia":
+                case "rising water":
+                    if (_windSource != null && _windSource.isPlaying) _windSource.Stop();
+                    AudioClip waveClip = Resources.Load<AudioClip>("Audio/ocean_waves");
+                    if (waveClip != null && _scenarioSource != null)
+                    {
+                        _scenarioSource.clip = waveClip;
+                        _scenarioSource.Play();
+                    }
+                    break;
+
+                case "acrophobia":
+                case "high elevation":
+                    AudioClip cityClip = Resources.Load<AudioClip>("Audio/city_ambient");
+                    if (cityClip != null && _scenarioSource != null)
+                    {
+                        _scenarioSource.clip = cityClip;
+                        _scenarioSource.Play();
+                    }
+                    if (_windSource != null && _windSource.clip != null && !_windSource.isPlaying)
+                    {
+                        _windSource.Play();
+                    }
+                    SetAcrophobiaAltitude(_lastAltitude);
+                    break;
+
+                default: // Menu / Portal
+                    if (_scenarioSource != null && _scenarioSource.isPlaying) _scenarioSource.Stop();
+                    if (_windSource != null && _windSource.isPlaying) _windSource.Stop();
+                    break;
+            }
+
+            UpdateScenarioVolumes();
+        }
+
+        /// <summary>
+        /// Smoothly modulates wind and city soundscapes as altitude changes.
+        /// As the patient ascends, the city rumble gently recedes while high-altitude wind surges.
+        /// </summary>
+        public void SetAcrophobiaAltitude(float currentY)
+        {
+            _lastAltitude = currentY;
+            if (_currentScenario.ToLowerInvariant() != "acrophobia") return;
+
+            float normY = Mathf.InverseLerp(32f, 360f, currentY);
+            var sm = TherapySettingsManager.Instance;
+            float amb = (sm != null) ? sm.ambienceVolume : 0.75f;
+
+            if (_windSource != null)
+            {
+                _windSource.volume = Mathf.Lerp(0.08f, 0.72f, normY) * amb;
+            }
+            if (_scenarioSource != null)
+            {
+                _scenarioSource.volume = Mathf.Lerp(0.50f, 0.05f, normY) * amb;
+            }
+        }
+
+        private void UpdateScenarioVolumes()
+        {
+            var sm = TherapySettingsManager.Instance;
+            float amb = (sm != null) ? sm.ambienceVolume : 0.75f;
+
+            if (_currentScenario.ToLowerInvariant() == "acrophobia")
+            {
+                SetAcrophobiaAltitude(_lastAltitude);
+            }
+            else if (_scenarioSource != null)
+            {
+                _scenarioSource.volume = 0.50f * amb;
             }
         }
 

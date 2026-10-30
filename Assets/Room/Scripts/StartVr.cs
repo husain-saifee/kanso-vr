@@ -26,6 +26,7 @@ public class StartVr : MonoBehaviour
         xnegmove.sessionStarted = false;
 
         PatientSessionManager.Instance.StartSession("Claustrophobia");
+        TherapyAudioManager.Instance.PlayScenarioAmbience("Claustrophobia");
 
         _posWalls = FindObjectsOfType<xposmove>();
         _negWalls = FindObjectsOfType<xnegmove>();
@@ -208,6 +209,7 @@ public class StartVr : MonoBehaviour
     {
         xposmove.sessionStarted = false;
         xnegmove.sessionStarted = false;
+        TherapyAudioManager.Instance.PlayScenarioAmbience("Menu");
 
         float cycleDuration = TherapySettingsManager.Instance.clausMoveDuration + TherapySettingsManager.Instance.clausMoveAfter;
         int count = (cycleDuration > 0.1f) ? (int)(xnegmove.tmeas / cycleDuration) : 0;

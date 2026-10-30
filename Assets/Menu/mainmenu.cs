@@ -529,28 +529,35 @@ public class mainmenu : MonoBehaviour
         var sm = TherapySettingsManager.Instance;
 
         // Toggle 1: Snap Turning
-        CreateSettingsToggleRow(_settingsCard.transform, "SnapTurnRow", 115, "Snap Turning (45°)", sm.snapTurn ? "Enabled" : "Disabled", () =>
+        CreateSettingsToggleRow(_settingsCard.transform, "SnapTurnRow", 125, "Snap Turning (45°)", sm.snapTurn ? "Enabled" : "Disabled", () =>
         {
             sm.SetSnapTurn(!sm.snapTurn);
             BuildSettingsCardRowsRefresh();
         });
 
         // Toggle 2: Seated Mode
-        CreateSettingsToggleRow(_settingsCard.transform, "SeatedRow", 55, "Seated Mode Height Offset (+0.35m)", sm.seatedMode ? "Enabled" : "Disabled", () =>
+        CreateSettingsToggleRow(_settingsCard.transform, "SeatedRow", 70, "Seated Mode Height Offset (+0.35m)", sm.seatedMode ? "Enabled" : "Disabled", () =>
         {
             sm.SetSeatedMode(!sm.seatedMode);
             BuildSettingsCardRowsRefresh();
         });
 
-        // Toggle 3: Comfort Vignette
-        CreateSettingsToggleRow(_settingsCard.transform, "VignetteRow", -5, "Motion Tunneling Vignette", sm.comfortVignetteEnabled ? "Enabled" : "Disabled", () =>
+        // Toggle 3: Anti-Aliasing (MSAA)
+        CreateSettingsToggleRow(_settingsCard.transform, "MsaaRow", 15, "Anti-Aliasing (VR Crispness)", (sm.msaaLevel == 4) ? "4x Crisp" : "2x Standard", () =>
+        {
+            sm.SetMsaaLevel(sm.msaaLevel == 4 ? 2 : 4);
+            BuildSettingsCardRowsRefresh();
+        });
+
+        // Toggle 4: Comfort Vignette
+        CreateSettingsToggleRow(_settingsCard.transform, "VignetteRow", -40, "Motion Tunneling Vignette", sm.comfortVignetteEnabled ? "Enabled" : "Disabled", () =>
         {
             sm.SetComfortVignette(!sm.comfortVignetteEnabled);
             BuildSettingsCardRowsRefresh();
         });
 
-        // Toggle 4: Audio Volume
-        CreateSettingsToggleRow(_settingsCard.transform, "VolumeRow", -65, "Master Audio", (AudioListener.volume > 0.05f) ? "Normal" : "Muted", () =>
+        // Toggle 5: Audio Volume
+        CreateSettingsToggleRow(_settingsCard.transform, "VolumeRow", -95, "Master Audio", (AudioListener.volume > 0.05f) ? "Normal" : "Muted", () =>
         {
             float nextVol = (AudioListener.volume > 0.05f) ? 0f : 0.9f;
             sm.SetMasterVolume(nextVol);

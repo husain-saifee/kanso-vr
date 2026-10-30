@@ -120,6 +120,11 @@ public class vrlook : MonoBehaviour
 
         HandleDesktopLook();
 
+        if (TherapyAudioManager.HasInstance && TherapyAudioManager.Instance != null)
+        {
+            TherapyAudioManager.Instance.SetAcrophobiaAltitude(transform.position.y);
+        }
+
         bool soundEnabled = TherapySettingsManager.Instance == null || TherapySettingsManager.Instance.acroSoundEnabled;
         if (soundEnabled && rd != null)
         {
@@ -263,8 +268,8 @@ public class vrlook : MonoBehaviour
 
     private void PlayAmbientSounds()
     {
-        // Gentle ambient bird song / wind cues at low volume (never sudden loud horn honks)
-        if (Tim - lastplay > 8f)
+        // Gentle distant traffic cues down at street level (only below 100m, never sudden loud horn honks in ear)
+        if (Tim - lastplay > 12f && transform.position.y < 100f)
         {
             int i = Random.Range(1, 4);
             AudioClip clip = i switch
@@ -275,7 +280,9 @@ public class vrlook : MonoBehaviour
             };
             if (clip != null && rd != null)
             {
-                AudioSource.PlayClipAtPoint(clip, transform.position, 0.35f);
+                // Play far below at street level (y = 0) with low volume for realistic 3D distance
+                Vector3 streetPos = new Vector3(transform.position.x, 0f, transform.position.z);
+                AudioSource.PlayClipAtPoint(clip, streetPos, 0.12f);
             }
             lastplay = Tim;
         }
